@@ -19,8 +19,21 @@ const OG_IMAGE = {
   alt: "An anatomical heart specimen floating above a plinth, beside the Anatomy Atelier wordmark",
 };
 
+/**
+ * Absolute URLs for og:image and friends. Resolved per host so a preview
+ * deployment does not advertise another origin's assets:
+ *   1. NEXT_PUBLIC_SITE_URL — explicit override, wins everywhere
+ *   2. VERCEL_PROJECT_PRODUCTION_URL — the project's stable production domain
+ *   3. the original Cloudflare/OpenAI host
+ */
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "https://anatomy-atelier.openai.site");
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://anatomy-atelier.openai.site"),
+  metadataBase: new URL(siteUrl),
   title: "Anatomy Atelier — Learn anatomy like an artist",
   description:
     "Explore medically detailed 3D organs — heart, brain, lungs, liver, kidneys, eye, intestine, pancreas, and skin — through an elegant, interactive anatomy atelier.",
