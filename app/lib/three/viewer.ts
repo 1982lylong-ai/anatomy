@@ -12,6 +12,7 @@ type ViewerCallbacks = {
 
 const DOT_PIXELS = 34;
 const CAMERA_FOV = 34;
+const DEPTH_PREPASS = "depth-prepass";
 const PLINTH_Y = -2.5;
 const PLINTH_TOP = PLINTH_Y + 0.17;
 /** Slightly above eye level, so the plinth reads as a disc the organ sits on
@@ -37,6 +38,8 @@ export class AnatomyViewer {
   private resizeObserver: ResizeObserver;
   private intersectionObserver: IntersectionObserver;
   private clipPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
+  /** Writes depth only — used to resolve a fading organ to one surface. */
+  private depthMaterial = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: true, depthTest: true });
   private crossSection = false;
   private isolated = false;
 
@@ -67,6 +70,7 @@ export class AnatomyViewer {
   private pointerStart = { x: 0, y: 0 };
   private dragged = false;
   private calloutEl: HTMLElement | null = null;
+  private fadeTween: gsap.core.Tween | null = null;
   private disposed = false;
 
   constructor(container: HTMLElement, callbacks: ViewerCallbacks) {
@@ -243,6 +247,11 @@ export class AnatomyViewer {
 
     const outgoing = this.organ;
     if (outgoing) {
+      // Switching mid-fade would otherwise leave the tween running and the
+      // depth proxies attached to a released organ.
+      this.fadeTween?.kill();
+      this.fadeTween = null;
+      this.setDepthPrepass(outgoing, false);
       this.hotspots.clear();
       this.busy(0.8);
       await gsap.to(outgoing.pivot.scale, {
@@ -306,16 +315,24 @@ export class AnatomyViewer {
     return list;
   }
 
+  /**
+   * Fades an organ in. Depth writing stays ON throughout: these are solid,
+   * closed meshes, and letting them blend in draw order instead of depth order
+   * makes the far side and interior show through the front for the length of
+   * the tween. A depth prepass keeps the result identical to the opaque pass —
+   * only the nearest surface is ever shaded.
+   */
   private fade(organ: LoadedOrgan, to: number, duration: number) {
     const materials = this.materials(organ);
     const state = { value: to >= 1 ? 0 : 1 };
     materials.forEach((material) => {
       material.transparent = true;
       material.opacity = state.value;
-      material.depthWrite = false;
+      material.depthWrite = true;
     });
+    this.setDepthPrepass(organ, true);
     this.busy(duration + 0.1);
-    gsap.to(state, {
+    this.fadeTween = gsap.to(state, {
       value: to,
       duration,
       ease: "power2.out",
@@ -331,8 +348,32 @@ export class AnatomyViewer {
             material.depthWrite = true;
           });
         }
+        this.setDepthPrepass(organ, false);
+        this.fadeTween = null;
         this.dirty = true;
       },
+    });
+  }
+
+  /**
+   * Lays down depth for the organ before it is shaded, so a partly transparent
+   * mesh still resolves to a single nearest surface per pixel. The proxy is
+   * parented to the mesh it mirrors, so it inherits the intro animation for
+   * free. Opaque, therefore drawn before anything transparent. Alive only while
+   * an organ fades; it costs one depth-only pass over ~120k triangles.
+   */
+  private setDepthPrepass(organ: LoadedOrgan, enabled: boolean) {
+    organ.meshes.forEach((mesh) => {
+      const existing = mesh.children.find((child) => child.name === DEPTH_PREPASS);
+      if (!enabled) {
+        existing?.removeFromParent();
+        return;
+      }
+      if (existing) return;
+      const proxy = new THREE.Mesh(mesh.geometry, this.depthMaterial);
+      proxy.name = DEPTH_PREPASS;
+      proxy.frustumCulled = mesh.frustumCulled;
+      mesh.add(proxy);
     });
   }
 
@@ -561,8 +602,9 @@ export class AnatomyViewer {
 
   private applyClipping(enabled: boolean) {
     if (!this.organ) return;
-    this.materials(this.organ).forEach((material) => {
-      material.clippingPlanes = enabled ? [this.clipPlane] : null;
+    const planes = enabled ? [this.clipPlane] : null;
+    [...this.materials(this.organ), this.depthMaterial].forEach((material) => {
+      material.clippingPlanes = planes;
       material.needsUpdate = true;
     });
     this.dirty = true;
@@ -600,6 +642,7 @@ export class AnatomyViewer {
     canvas.removeEventListener("keydown", this.onKeyDown);
 
     this.hotspots.dispose();
+    this.depthMaterial.dispose();
     this.assets.dispose();
     this.scene.environment?.dispose();
     (this.contactShadow.material as THREE.MeshBasicMaterial).map?.dispose();
