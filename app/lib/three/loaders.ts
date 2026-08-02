@@ -3,51 +3,114 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { disposeObject } from "./dispose";
 
+/** Edge length of the cube every organ is normalised into, so hotspot
+ *  coordinates authored in `anatomy-data` mean the same thing for each model. */
+export const FIT_SIZE = 3.8;
+
+const CACHE_LIMIT = 3;
+
+export type LoadedOrgan = {
+  url: string;
+  /** Hotspot space: the fitted model, centred on the origin, spanning FIT_SIZE. */
+  pivot: THREE.Group;
+  meshes: THREE.Mesh[];
+  mixer: THREE.AnimationMixer | null;
+};
+
 export class AnatomyAssetManager {
   private loader: GLTFLoader;
-  private active: THREE.Group | null = null;
-  private mixer: THREE.AnimationMixer | null = null;
+  private cache = new Map<string, LoadedOrgan>();
+  private inflight = new Map<string, Promise<LoadedOrgan>>();
+  private current: LoadedOrgan | null = null;
   private maxAnisotropy: number;
 
   constructor(renderer: THREE.WebGLRenderer) {
-    this.maxAnisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    this.maxAnisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
     this.loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   }
 
-  async load(url: string, onProgress?: (progress: number) => void) {
+  get hasAnimation() {
+    return Boolean(this.current?.mixer);
+  }
+
+  /** Warms the HTTP cache so switching organs feels instant. */
+  prefetch(url: string) {
+    if (this.cache.has(url) || this.inflight.has(url)) return;
+    void fetch(url, { priority: "low" } as RequestInit).catch(() => {});
+  }
+
+  async load(url: string, onProgress?: (progress: number) => void): Promise<LoadedOrgan> {
+    const cached = this.cache.get(url);
+    if (cached) {
+      this.cache.delete(url);
+      this.cache.set(url, cached);
+      this.resetMaterials(cached);
+      onProgress?.(1);
+      this.current = cached;
+      return cached;
+    }
+
+    const pending = this.inflight.get(url) ?? this.parse(url, onProgress);
+    this.inflight.set(url, pending);
+    try {
+      const organ = await pending;
+      this.cache.set(url, organ);
+      this.evict();
+      this.current = organ;
+      return organ;
+    } finally {
+      this.inflight.delete(url);
+    }
+  }
+
+  private async parse(url: string, onProgress?: (progress: number) => void): Promise<LoadedOrgan> {
     const gltf = await this.loader.loadAsync(url, (event) => {
       if (event.total > 0) onProgress?.(event.loaded / event.total);
     });
-    const root = gltf.scene;
-    const box = new THREE.Box3().setFromObject(root);
+
+    const model = gltf.scene;
+    const box = new THREE.Box3().setFromObject(model);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
-    const scale = 3.8 / Math.max(size.x, size.y, size.z, 0.001);
-    root.scale.setScalar(scale);
-    root.position.copy(center.multiplyScalar(-scale));
-    root.rotation.set(0.05, -0.28, 0);
+    const scale = FIT_SIZE / Math.max(size.x, size.y, size.z, 0.001);
+    model.scale.setScalar(scale);
+    model.position.copy(center.multiplyScalar(-scale));
 
-    root.traverse((child) => {
+    // The pivot is what the viewer animates and what hotspots are parented to,
+    // so hotspot coordinates stay in the normalised FIT_SIZE space.
+    const pivot = new THREE.Group();
+    pivot.name = "organ-pivot";
+    pivot.add(model);
+    pivot.rotation.set(0.05, -0.28, 0);
+
+    const meshes: THREE.Mesh[] = [];
+    model.traverse((child) => {
       if (!(child instanceof THREE.Mesh)) return;
-      child.castShadow = true;
-      child.receiveShadow = true;
+      meshes.push(child);
       child.frustumCulled = true;
-      const materials = Array.isArray(child.material) ? child.material : [child.material];
-      materials.forEach((material) => {
+      // Real-time shadow casting is replaced by a baked contact shadow, which
+      // saves a full extra pass over the mesh every frame.
+      child.castShadow = false;
+      child.receiveShadow = false;
+      this.forEachMaterial(child, (material) => {
         material.transparent = false;
         material.opacity = 1;
         material.depthWrite = true;
         material.depthTest = true;
+        material.side = THREE.FrontSide;
         if (material instanceof THREE.MeshStandardMaterial) {
           material.roughness = THREE.MathUtils.clamp(material.roughness ?? 0.46, 0.34, 0.58);
           material.metalness = 0;
-          material.envMapIntensity = 1;
+          material.envMapIntensity = 0.32;
           material.emissive.set(0x000000);
           material.emissiveIntensity = 0;
           if ("clearcoat" in material) {
             const physical = material as THREE.MeshPhysicalMaterial;
             physical.clearcoat = Math.max(physical.clearcoat, 0.16);
             physical.clearcoatRoughness = 0.48;
+            // Volume/transmission are per-pixel expensive and invisible here.
+            physical.transmission = 0;
+            physical.thickness = 0;
           }
           if (material.map) {
             material.map.colorSpace = THREE.SRGBColorSpace;
@@ -59,29 +122,69 @@ export class AnatomyAssetManager {
       });
     });
 
+    let mixer: THREE.AnimationMixer | null = null;
     if (gltf.animations.length) {
-      this.mixer = new THREE.AnimationMixer(root);
-      gltf.animations.forEach((clip) => this.mixer?.clipAction(clip).play());
+      mixer = new THREE.AnimationMixer(model);
+      gltf.animations.forEach((clip) => mixer?.clipAction(clip).play());
     }
-    this.active = root;
-    return root;
+
+    return { url, pivot, meshes, mixer };
+  }
+
+  /** Undoes viewer tools (wireframe, clipping, fade) before a cached organ returns. */
+  private resetMaterials(organ: LoadedOrgan) {
+    organ.pivot.rotation.set(0.05, -0.28, 0);
+    organ.pivot.position.set(0, 0, 0);
+    organ.meshes.forEach((mesh) => {
+      this.forEachMaterial(mesh, (material) => {
+        material.transparent = false;
+        material.opacity = 1;
+        material.depthWrite = true;
+        material.clippingPlanes = null;
+        material.clipShadows = false;
+        if (material instanceof THREE.MeshStandardMaterial) material.wireframe = false;
+        material.needsUpdate = true;
+      });
+    });
+  }
+
+  private forEachMaterial(mesh: THREE.Mesh, fn: (material: THREE.Material) => void) {
+    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    materials.forEach(fn);
+  }
+
+  private evict() {
+    while (this.cache.size > CACHE_LIMIT) {
+      const oldest = this.cache.keys().next().value as string | undefined;
+      if (!oldest) return;
+      const organ = this.cache.get(oldest);
+      this.cache.delete(oldest);
+      if (organ && organ !== this.current) this.destroy(organ);
+    }
+  }
+
+  private destroy(organ: LoadedOrgan) {
+    organ.mixer?.stopAllAction();
+    organ.mixer?.uncacheRoot(organ.pivot);
+    organ.pivot.removeFromParent();
+    disposeObject(organ.pivot);
   }
 
   update(delta: number) {
-    this.mixer?.update(delta);
+    this.current?.mixer?.update(delta);
   }
 
-  release(root = this.active) {
-    if (!root) return;
-    this.mixer?.stopAllAction();
-    this.mixer?.uncacheRoot(root);
-    this.mixer = null;
-    root.removeFromParent();
-    disposeObject(root);
-    if (root === this.active) this.active = null;
+  /** Detaches from the scene but keeps the organ warm for the next visit. */
+  release(organ: LoadedOrgan | null = this.current) {
+    if (!organ) return;
+    organ.mixer?.stopAllAction();
+    organ.pivot.removeFromParent();
+    if (organ === this.current) this.current = null;
   }
 
   dispose() {
     this.release();
+    this.cache.forEach((organ) => this.destroy(organ));
+    this.cache.clear();
   }
 }

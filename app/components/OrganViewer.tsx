@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box,
   CircleDashed,
@@ -10,9 +10,10 @@ import {
   ScanLine,
   Search,
   Sparkles,
+  X,
 } from "lucide-react";
-import type { Organ } from "../lib/anatomy-data";
-import type { AnatomyViewer, ProjectedHotspot } from "../lib/three/viewer";
+import type { Hotspot, Organ } from "../lib/anatomy-data";
+import type { AnatomyViewer } from "../lib/three/viewer";
 
 type Props = {
   organ: Organ;
@@ -27,11 +28,20 @@ export function OrganViewer({ organ, autoRotate, onAutoRotate, compare, onCompar
   const viewerRef = useRef<AnatomyViewer | null>(null);
   const organRef = useRef(organ);
   const autoRotateRef = useRef(autoRotate);
-  const [hotspots, setHotspots] = useState<ProjectedHotspot[]>([]);
+  const [selected, setSelected] = useState<Hotspot | null>(null);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
+  const [slowLoad, setSlowLoad] = useState(false);
   const [activeTool, setActiveTool] = useState<string | null>(null);
-  const [selectedHotspot, setSelectedHotspot] = useState<string | null>(null);
+
+  // A typical organ is ready well inside a second — flashing a loading panel for
+  // that reads as jank. It only appears if the fetch is genuinely slow; the flag
+  // is cleared by onLoading when the next load starts.
+  useEffect(() => {
+    if (!loading) return;
+    const timer = window.setTimeout(() => setSlowLoad(true), 900);
+    return () => window.clearTimeout(timer);
+  }, [loading]);
 
   useEffect(() => {
     organRef.current = organ;
@@ -48,10 +58,11 @@ export function OrganViewer({ organ, autoRotate, onAutoRotate, compare, onCompar
     void import("../lib/three/viewer").then(({ AnatomyViewer: Viewer }) => {
       if (cancelled || !mountRef.current) return;
       viewer = new Viewer(mountRef.current, {
-        onHotspots: setHotspots,
+        onSelect: setSelected,
         onLoading: (isLoading, value) => {
           setLoading(isLoading);
           setProgress(value);
+          if (isLoading) setSlowLoad(false);
         },
       });
       viewerRef.current = viewer;
@@ -78,6 +89,12 @@ export function OrganViewer({ organ, autoRotate, onAutoRotate, compare, onCompar
   }, [organ]);
 
   useEffect(() => viewerRef.current?.setAutoRotate(autoRotate), [autoRotate]);
+
+  // The viewer drives the callout's position directly, so a spinning model
+  // never costs a React render.
+  const calloutRef = useCallback((node: HTMLDivElement | null) => {
+    viewerRef.current?.attachCallout(node);
+  }, []);
 
   const handleTool = (tool: string) => {
     const viewer = viewerRef.current;
@@ -127,30 +144,29 @@ export function OrganViewer({ organ, autoRotate, onAutoRotate, compare, onCompar
 
       <aside className="tip-note" aria-label="Viewer instructions">
         <span><Sparkles size={15} /> Tip</span>
-        <p>Drag to rotate<br />Scroll to zoom<br />Click a label to learn more</p>
+        <p>Drag to rotate<br />Scroll to zoom<br />Click a dot to learn more</p>
       </aside>
 
-      {hotspots.map((hotspot) => (
-        <button
-          type="button"
-          key={hotspot.id}
-          className={`hotspot ${selectedHotspot === hotspot.id ? "selected" : ""}`}
-          style={{
-            left: hotspot.x,
-            top: hotspot.y,
-            opacity: hotspot.visible && !loading ? 1 : 0,
-            pointerEvents: hotspot.visible && !loading ? "auto" : "none",
-            "--hotspot-color": hotspot.color,
-          } as React.CSSProperties}
-          onClick={() => setSelectedHotspot(selectedHotspot === hotspot.id ? null : hotspot.id)}
-          aria-label={`${hotspot.label}: ${hotspot.detail}`}
-        >
-          <i />
-          <span><b>{hotspot.label}</b><small>{hotspot.detail}</small></span>
-        </button>
-      ))}
+      {selected && (
+        <div className="hotspot-callout" ref={calloutRef} data-side="right">
+          <div className="callout-body" style={{ "--hotspot-color": selected.color } as React.CSSProperties}>
+            <button className="callout-close" type="button" onClick={() => viewerRef.current?.clearSelection()} aria-label="Close">
+              <X size={13} />
+            </button>
+            <b>{selected.label}</b>
+            <small>{selected.detail}</small>
+          </div>
+        </div>
+      )}
 
-      {loading && (
+      {/* Screen-reader equivalent of the dots, which live in the canvas. */}
+      <ul className="hotspot-index">
+        {organ.hotspots.map((hotspot) => (
+          <li key={hotspot.id}>{hotspot.label}: {hotspot.detail}</li>
+        ))}
+      </ul>
+
+      {loading && slowLoad && (
         <div className="model-loader" role="status" aria-live="polite">
           <div className="loader-orbit"><Maximize2 size={20} /></div>
           <strong>Preparing the {organ.name.toLowerCase()}</strong>
@@ -164,7 +180,7 @@ export function OrganViewer({ organ, autoRotate, onAutoRotate, compare, onCompar
       </button>
 
       <div className="view-caption">
-        <span>3D specimen · drag to explore</span>
+        <span>3D specimen · click a dot to explore</span>
         <strong>{organ.scientificName}</strong>
       </div>
     </section>

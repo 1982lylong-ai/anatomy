@@ -1,4 +1,13 @@
-export type OrganId = "heart" | "brain" | "liver" | "kidneys" | "eyeball" | "intestine";
+export type OrganId =
+  | "heart"
+  | "brain"
+  | "lungs"
+  | "liver"
+  | "kidneys"
+  | "eyeball"
+  | "intestine"
+  | "pancreas"
+  | "skin";
 
 export type Hotspot = {
   id: string;
@@ -28,6 +37,9 @@ export type Organ = {
   comparison: string;
   conditions: string[];
   hotspots: Hotspot[];
+  /** Whether `/anatomy/<id>/*.webp` illustrations exist. Organs without them
+   *  fall back to the accent glyph rather than a broken image. */
+  illustrated: boolean;
 };
 
 export const organs: Organ[] = [
@@ -50,6 +62,7 @@ export const organs: Organ[] = [
     tissue: "Cardiac muscle tissue",
     comparison: "Heart vs. brain",
     conditions: ["Coronary artery disease", "Arrhythmia", "Heart valve disorders"],
+    illustrated: true,
     hotspots: [
       { id: "aorta", label: "Aorta", detail: "Main artery", position: [-0.35, 1.65, 0.55], color: "#ee7c6a" },
       { id: "left-atrium", label: "Left Atrium", detail: "Receives oxygenated blood", position: [0.82, 0.65, 0.5], color: "#f2a33b" },
@@ -78,11 +91,40 @@ export const organs: Organ[] = [
     tissue: "Cerebral cortex",
     comparison: "Brain vs. eye",
     conditions: ["Migraine", "Stroke", "Neurodegenerative disease"],
+    illustrated: true,
     hotspots: [
       { id: "frontal", label: "Frontal Lobe", detail: "Planning & movement", position: [-0.7, 0.65, 0.8], color: "#ee7c6a" },
       { id: "parietal", label: "Parietal Lobe", detail: "Sensory integration", position: [0.15, 1.1, 0.65], color: "#f2a33b" },
       { id: "temporal", label: "Temporal Lobe", detail: "Memory & hearing", position: [0.75, -0.1, 0.82], color: "#6393d8" },
       { id: "cerebellum", label: "Cerebellum", detail: "Balance & coordination", position: [0.72, -0.9, 0.55], color: "#d89bc4" },
+    ],
+  },
+  {
+    id: "lungs",
+    name: "Lungs",
+    scientificName: "Pulmones",
+    system: "Respiratory System",
+    model: "/models/lungs.glb",
+    icon: "◍",
+    accent: "#dd8f8b",
+    description: "Paired organs that draw in air and trade oxygen for carbon dioxide across a vast, delicate surface.",
+    poetic: "The breath of life",
+    size: "Each about 25 cm tall",
+    weight: "About 1 kg for the pair",
+    location: "Either side of the heart, within the ribcage",
+    function: "Exchanges oxygen for carbon dioxide",
+    dailyFact: "Moves around 11,000 L of air",
+    medical: "Alveoli fold a tennis-court-sized exchange surface into the chest.",
+    tissue: "Alveolar tissue",
+    comparison: "Lungs vs. heart",
+    conditions: ["Asthma", "COPD", "Pneumonia"],
+    illustrated: false,
+    hotspots: [
+      { id: "trachea", label: "Trachea", detail: "Carries air to the lungs", position: [0, 1.6, 0.2], color: "#6393d8" },
+      { id: "right-lung", label: "Right Lung", detail: "Three lobes", position: [-1.2, 0.1, 0.7], color: "#ee7c6a" },
+      { id: "left-lung", label: "Left Lung", detail: "Two lobes, room for the heart", position: [1.2, 0.1, 0.7], color: "#f2a33b" },
+      { id: "bronchus", label: "Bronchus", detail: "Branching airway", position: [-0.03, 0.3, 0.35], color: "#d89bc4" },
+      { id: "base", label: "Lung Base", detail: "Rests on the diaphragm", position: [-1.14, -1.2, 1], color: "#7fa88a" },
     ],
   },
   {
@@ -104,6 +146,7 @@ export const organs: Organ[] = [
     tissue: "Hepatic lobules",
     comparison: "Liver vs. intestine",
     conditions: ["Fatty liver disease", "Hepatitis", "Cirrhosis"],
+    illustrated: true,
     hotspots: [
       { id: "right-lobe", label: "Right Lobe", detail: "Largest hepatic lobe", position: [-0.75, 0.35, 0.75], color: "#ee7c6a" },
       { id: "left-lobe", label: "Left Lobe", detail: "Crosses the midline", position: [0.85, 0.25, 0.75], color: "#f2a33b" },
@@ -129,6 +172,7 @@ export const organs: Organ[] = [
     tissue: "Renal cortex",
     comparison: "Kidneys vs. liver",
     conditions: ["Kidney stones", "Chronic kidney disease", "Urinary infection"],
+    illustrated: true,
     hotspots: [
       { id: "cortex", label: "Renal Cortex", detail: "Outer filtering layer", position: [-0.9, 0.55, 0.7], color: "#ee7c6a" },
       { id: "medulla", label: "Renal Medulla", detail: "Concentrates urine", position: [0.85, 0.2, 0.7], color: "#f2a33b" },
@@ -154,10 +198,11 @@ export const organs: Organ[] = [
     tissue: "Retinal layers",
     comparison: "Eye vs. brain",
     conditions: ["Myopia", "Cataract", "Glaucoma"],
+    illustrated: true,
     hotspots: [
-      { id: "cornea", label: "Cornea", detail: "Clear focusing surface", position: [0, 0.05, 1.3], color: "#6393d8" },
-      { id: "iris", label: "Iris", detail: "Controls light entry", position: [0.5, 0.2, 1.05], color: "#f2a33b" },
-      { id: "optic", label: "Optic Nerve", detail: "Carries visual signals", position: [-0.8, -0.25, -0.5], color: "#d89bc4" },
+      { id: "cornea", label: "Cornea", detail: "Clear focusing surface", position: [-0.94, 0.05, 1.47], color: "#6393d8" },
+      { id: "iris", label: "Iris", detail: "Controls light entry", position: [-1.22, -0.53, 1.15], color: "#f2a33b" },
+      { id: "optic", label: "Optic Nerve", detail: "Carries visual signals", position: [1.61, -0.18, 0.54], color: "#d89bc4" },
     ],
   },
   {
@@ -179,10 +224,65 @@ export const organs: Organ[] = [
     tissue: "Intestinal villi",
     comparison: "Intestine vs. liver",
     conditions: ["Irritable bowel syndrome", "Inflammatory bowel disease", "Celiac disease"],
+    illustrated: true,
     hotspots: [
       { id: "duodenum", label: "Duodenum", detail: "First small-intestine segment", position: [0.6, 0.8, 0.75], color: "#f2a33b" },
       { id: "jejunum", label: "Jejunum", detail: "Major absorption region", position: [-0.45, 0.1, 0.82], color: "#ee7c6a" },
       { id: "colon", label: "Colon", detail: "Reclaims water", position: [0.75, -0.55, 0.72], color: "#6393d8" },
+    ],
+  },
+  {
+    id: "pancreas",
+    name: "Pancreas",
+    scientificName: "Pancreas",
+    system: "Endocrine System",
+    model: "/models/pancreas.glb",
+    icon: "◈",
+    accent: "#c69a5e",
+    description: "A dual-purpose gland that releases digestive enzymes into the gut and the hormones that steady blood sugar.",
+    poetic: "The quiet regulator",
+    size: "About 15 cm long",
+    weight: "70–100 g",
+    location: "Behind the stomach, across the upper abdomen",
+    function: "Digestive enzymes and insulin",
+    dailyFact: "Makes about 1.5 L of enzyme-rich juice",
+    medical: "Islets of Langerhans release insulin and glucagon to balance blood sugar.",
+    tissue: "Pancreatic acini",
+    comparison: "Pancreas vs. liver",
+    conditions: ["Pancreatitis", "Type 1 diabetes", "Pancreatic cancer"],
+    illustrated: false,
+    hotspots: [
+      { id: "head", label: "Head", detail: "Cradled by the duodenum", position: [-1.32, -0.36, 0.55], color: "#ee7c6a" },
+      { id: "body", label: "Body", detail: "Crosses the spine", position: [0.05, 0.25, 0.45], color: "#f2a33b" },
+      { id: "tail", label: "Tail", detail: "Reaches the spleen", position: [1.55, 0.3, 0.35], color: "#6393d8" },
+      { id: "duct", label: "Pancreatic Duct", detail: "Drains enzymes to the gut", position: [-0.61, 0.39, 0.5], color: "#d89bc4" },
+    ],
+  },
+  {
+    id: "skin",
+    name: "Skin",
+    scientificName: "Integumentum",
+    system: "Integumentary System",
+    model: "/models/skin.glb",
+    icon: "▦",
+    accent: "#c99277",
+    description: "The body’s largest organ — a living barrier that senses touch, holds in water, and regulates temperature.",
+    poetic: "The living boundary",
+    size: "About 2 m² spread flat",
+    weight: "3.5–5 kg",
+    location: "Covering the entire body",
+    function: "Protects, senses, and cools",
+    dailyFact: "Sheds around 500 million cells",
+    medical: "Three layers — epidermis, dermis, and hypodermis — each with a distinct job.",
+    tissue: "Epidermal layers",
+    comparison: "Skin vs. intestine",
+    conditions: ["Eczema", "Psoriasis", "Melanoma"],
+    illustrated: false,
+    hotspots: [
+      { id: "epidermis", label: "Epidermis", detail: "Outer protective layer", position: [-0.05, 0.88, 1.4], color: "#ee7c6a" },
+      { id: "dermis", label: "Dermis", detail: "Nerves, vessels & glands", position: [0.29, 0.05, 1.4], color: "#f2a33b" },
+      { id: "hypodermis", label: "Hypodermis", detail: "Fat and insulation", position: [-0.39, -1.15, 1.4], color: "#6393d8" },
+      { id: "follicle", label: "Hair Follicle", detail: "Anchors each hair", position: [0.89, -0.44, 1.4], color: "#d89bc4" },
     ],
   },
 ];

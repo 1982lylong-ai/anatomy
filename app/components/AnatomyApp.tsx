@@ -23,9 +23,45 @@ import {
   X,
 } from "lucide-react";
 import { OrganViewer } from "./OrganViewer";
-import { organById, organs, type OrganId } from "../lib/anatomy-data";
+import { organById, organs, type Organ, type OrganId } from "../lib/anatomy-data";
 
 type Modal = "lesson" | "quiz" | "animation" | null;
+
+/**
+ * Renders an organ illustration, or its accent glyph for organs that ship as a
+ * 3D model without the painted asset set. Keeps every image slot filled instead
+ * of leaving a broken `<img>` behind.
+ */
+function OrganArt({
+  organ,
+  asset,
+  alt,
+  size,
+}: {
+  organ: Organ;
+  asset: "thumb" | "organ" | "microscopic" | "compare" | "location";
+  alt: string;
+  size?: number;
+}) {
+  if (!organ.illustrated) {
+    return (
+      <span className="art-fallback" style={{ "--art-accent": organ.accent } as React.CSSProperties} role="img" aria-label={alt}>
+        {organ.icon}
+      </span>
+    );
+  }
+  return (
+    <img
+      key={`${organ.id}-${asset}`}
+      src={`/anatomy/${organ.id}/${asset}.webp`}
+      alt={alt}
+      width={size}
+      height={size}
+      loading={asset === "thumb" ? "eager" : "lazy"}
+      decoding="async"
+    />
+  );
+}
 
 export function AnatomyApp() {
   const [organId, setOrganId] = useState<OrganId>("heart");
@@ -35,8 +71,9 @@ export function AnatomyApp() {
   const [query, setQuery] = useState("");
   const [mobileLibrary, setMobileLibrary] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const prefetched = useRef(new Set<OrganId>());
   const organ = organById[organId];
-  const assetBase = `/anatomy/${organ.id}`;
+  const reference = organById[organId === "heart" ? "brain" : "heart"];
   const filteredOrgans = useMemo(
     () => organs.filter((item) => `${item.name} ${item.system}`.toLowerCase().includes(query.toLowerCase())),
     [query],
@@ -51,13 +88,23 @@ export function AnatomyApp() {
   }, [organId]);
 
   const selectOrgan = (id: OrganId) => {
-    ["organ", "microscopic", "compare", "location"].forEach((asset) => {
-      const image = new Image();
-      image.src = `/anatomy/${id}/${asset}.webp`;
-    });
+    if (organById[id].illustrated) {
+      ["organ", "microscopic", "compare", "location"].forEach((asset) => {
+        const image = new Image();
+        image.src = `/anatomy/${id}/${asset}.webp`;
+      });
+    }
     setOrganId(id);
     setMobileLibrary(false);
     setCompare(false);
+  };
+
+  // Warms the model in the HTTP cache while the pointer is still travelling,
+  // so the switch usually renders without a visible loading pass.
+  const prefetchOrgan = (id: OrganId) => {
+    if (id === organId || prefetched.current.has(id)) return;
+    prefetched.current.add(id);
+    void fetch(organById[id].model, { priority: "low" } as RequestInit).catch(() => {});
   };
 
   return (
@@ -96,10 +143,12 @@ export function AnatomyApp() {
                 key={item.id}
                 className={`organ-item ${organId === item.id ? "active" : ""}`}
                 onClick={() => selectOrgan(item.id)}
+                onPointerEnter={() => prefetchOrgan(item.id)}
+                onFocus={() => prefetchOrgan(item.id)}
                 style={{ "--item-accent": item.accent } as React.CSSProperties}
               >
                 <span className="organ-glyph">
-                  <img src={`/anatomy/${item.id}/thumb.webp`} alt="" width="47" height="47" loading="eager" decoding="async" />
+                  <OrganArt organ={item} asset="thumb" alt={`${item.name} thumbnail`} size={47} />
                 </span>
                 <span><b>{item.name}</b><small>{item.system}</small></span>
                 {organId === item.id && <Heart className="favorite" size={14} fill="currentColor" />}
@@ -127,7 +176,7 @@ export function AnatomyApp() {
           <div className="info-title-row" data-reveal>
             <div><h1>{organ.name}</h1><em>{organ.poetic}</em></div>
             <span className="specimen-stamp">
-              <img key={organ.id} src={`${assetBase}/organ.webp`} alt={`${organ.name} anatomical illustration`} width="92" height="92" decoding="async" />
+              <OrganArt organ={organ} asset="organ" alt={`${organ.name} anatomical illustration`} size={92} />
             </span>
           </div>
           <p className="description" data-reveal>{organ.description}</p>
@@ -151,9 +200,9 @@ export function AnatomyApp() {
 
       {compare && (
         <section className="compare-strip" aria-label="Organ comparison">
-          <div className="compare-organ"><img src={`${assetBase}/thumb.webp`} alt="" /><span>Comparing</span><strong>{organ.name}</strong><small>{organ.system}</small></div>
+          <div className="compare-organ"><OrganArt organ={organ} asset="thumb" alt="" /><span>Comparing</span><strong>{organ.name}</strong><small>{organ.system}</small></div>
           <b>vs.</b>
-          <div className="compare-organ"><img src={`/anatomy/${organ.id === "heart" ? "brain" : "heart"}/thumb.webp`} alt="" /><span>Reference</span><strong>{organ.id === "heart" ? "Brain" : "Heart"}</strong><small>{organ.id === "heart" ? "Nervous System" : "Cardiovascular"}</small></div>
+          <div className="compare-organ"><OrganArt organ={reference} asset="thumb" alt="" /><span>Reference</span><strong>{reference.name}</strong><small>{reference.system}</small></div>
           <dl><div><dt>Primary role</dt><dd>{organ.function}</dd></div><div><dt>Scale</dt><dd>{organ.size}</dd></div></dl>
           <button onClick={() => setCompare(false)} aria-label="Close comparison"><X size={16} /></button>
         </section>
@@ -165,17 +214,17 @@ export function AnatomyApp() {
         </article>
         <article>
           <header><div><em>Microscopic view</em><h3>{organ.tissue}</h3></div><Microscope size={17} /></header>
-          <div className="microscope-visual organ-card-image"><img key={`${organ.id}-micro`} src={`${assetBase}/microscopic.webp`} alt={`${organ.name} microscopic tissue view`} loading="lazy" decoding="async" /></div>
+          <div className="microscope-visual organ-card-image"><OrganArt organ={organ} asset="microscopic" alt={`${organ.name} microscopic tissue view`} /></div>
           <button onClick={() => setModal("lesson")}>Explore tissue <ArrowRight size={14} /></button>
         </article>
         <article>
           <header><div><em>Compare organs</em><h3>{organ.comparison}</h3></div><Share2 size={17} /></header>
-          <div className="comparison-visual organ-card-image"><img key={`${organ.id}-compare`} src={`${assetBase}/compare.webp`} alt={`${organ.comparison} anatomical comparison`} loading="lazy" decoding="async" /></div>
+          <div className="comparison-visual organ-card-image"><OrganArt organ={organ} asset="compare" alt={`${organ.comparison} anatomical comparison`} /></div>
           <button onClick={() => setCompare(true)}>Open comparison <ArrowRight size={14} /></button>
         </article>
         <article>
           <header><div><em>Function animation</em><h3>{organ.function}</h3></div><Play size={17} /></header>
-          <div className="function-visual organ-card-image" onClick={() => setModal("animation")}><img key={`${organ.id}-function`} src={`${assetBase}/organ.webp`} alt={`${organ.name} function illustration`} loading="lazy" decoding="async" /><i className="function-pulse" /><button aria-label="Play animation"><Play size={18} fill="currentColor" /></button></div>
+          <div className="function-visual organ-card-image" onClick={() => setModal("animation")}><OrganArt organ={organ} asset="organ" alt={`${organ.name} function illustration`} /><i className="function-pulse" /><button aria-label="Play animation"><Play size={18} fill="currentColor" /></button></div>
         </article>
         <article>
           <header><div><em>Clinical notes</em><h3>Common conditions</h3></div><FileText size={17} /></header>
@@ -184,17 +233,18 @@ export function AnatomyApp() {
         </article>
         <article className="system-card">
           <header><div><em>Where it works</em><h3>{organ.system}</h3></div><BrainCircuit size={17} /></header>
-          <div className="system-visual organ-card-image"><img key={`${organ.id}-location`} src={`${assetBase}/location.webp`} alt={`${organ.name} location in the ${organ.system.toLowerCase()}`} loading="lazy" decoding="async" /></div>
+          <div className="system-visual organ-card-image"><OrganArt organ={organ} asset="location" alt={`${organ.name} location in the ${organ.system.toLowerCase()}`} /></div>
         </article>
       </section>
 
-      {modal && <LearningModal type={modal} organName={organ.name} organId={organ.id} onClose={() => setModal(null)} />}
+      {modal && <LearningModal type={modal} organ={organ} onClose={() => setModal(null)} />}
       {mobileLibrary && <button className="drawer-backdrop" aria-label="Close library" onClick={() => setMobileLibrary(false)} />}
     </main>
   );
 }
 
-function LearningModal({ type, organName, organId, onClose }: { type: Exclude<Modal, null>; organName: string; organId: OrganId; onClose: () => void }) {
+function LearningModal({ type, organ, onClose }: { type: Exclude<Modal, null>; organ: Organ; onClose: () => void }) {
+  const organName = organ.name;
   const title = type === "quiz" ? `${organName} quick quiz` : type === "animation" ? `${organName} in motion` : `Inside the ${organName.toLowerCase()}`;
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
@@ -213,7 +263,7 @@ function LearningModal({ type, organName, organId, onClose }: { type: Exclude<Mo
         ) : (
           <>
             <p>Follow the highlighted structures, rotate the specimen, and connect form with function. This short study moment is designed to build a durable mental model.</p>
-            <div className={`modal-demo ${type === "animation" ? "moving" : ""}`}><img src={`/anatomy/${organId}/organ.webp`} alt={`${organName} illustration`} /></div>
+            <div className={`modal-demo ${type === "animation" ? "moving" : ""}`}><OrganArt organ={organ} asset="organ" alt={`${organName} illustration`} /></div>
             <button className="lesson-button" onClick={onClose}>Continue exploring <ArrowRight size={16} /></button>
           </>
         )}

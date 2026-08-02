@@ -262,23 +262,52 @@ button:focus-visible, input:focus-visible, canvas:focus-visible {
 .tip-note span { display: flex; align-items: center; gap: 4px; color: var(--lavender); font: italic 12px "Comic Sans MS", cursive; }
 .tip-note p { margin: 8px 0 0; font: 500 14px/1.55 var(--font-serif), serif; }
 
-.hotspot {
+/* Anchor point only — the viewer writes the transform each frame so tracking a
+   spinning model costs no React renders. The dots themselves live in the canvas. */
+.hotspot-callout {
   position: absolute;
-  z-index: 4;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  width: 0;
+  height: 0;
+  will-change: transform;
 }
-.hotspot > i { width: 11px; height: 11px; border-radius: 50%; background: var(--hotspot-color); border: 3px solid rgba(255,255,255,.78); box-shadow: 0 0 0 1px rgba(88,64,48,.2), 0 0 0 9px color-mix(in srgb, var(--hotspot-color), transparent 82%); }
-.hotspot > span { min-width: 116px; padding: 9px 11px; text-align: left; border: 1px solid rgba(116,89,67,.14); border-radius: 12px; background: rgba(255,252,247,.88); backdrop-filter: blur(10px); box-shadow: 0 6px 18px rgba(83,59,42,.06); }
-.hotspot b { display: block; font: 500 13px var(--font-serif), serif; }
-.hotspot small { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
-.hotspot.selected > span { box-shadow: 0 0 0 2px color-mix(in srgb, var(--hotspot-color), transparent 35%), 0 12px 28px rgba(83,59,42,.12); }
+.callout-body {
+  position: absolute;
+  top: -30px;
+  width: 168px;
+  padding: 10px 26px 11px 12px;
+  border: 1px solid rgba(116,89,67,.14);
+  border-radius: 13px;
+  background: rgba(255,252,247,.92);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--hotspot-color), transparent 78%), 0 12px 28px rgba(83,59,42,.12);
+  animation: callout-in .26s cubic-bezier(.2,.85,.3,1);
+  transition: opacity .2s ease;
+}
+.hotspot-callout[data-side="right"] .callout-body { left: 22px; }
+.hotspot-callout[data-side="left"] .callout-body { right: 22px; }
+.hotspot-callout[data-behind="true"] .callout-body { opacity: .3; }
+.callout-body:before {
+  content: "";
+  position: absolute;
+  top: 32px;
+  width: 18px;
+  height: 1px;
+  background: var(--hotspot-color);
+  opacity: .55;
+}
+.hotspot-callout[data-side="right"] .callout-body:before { right: 100%; }
+.hotspot-callout[data-side="left"] .callout-body:before { left: 100%; }
+.callout-body b { display: block; padding-left: 13px; font: 500 13px var(--font-serif), serif; }
+.callout-body b:before { content: ""; position: absolute; left: 12px; top: 15px; width: 7px; height: 7px; border-radius: 50%; background: var(--hotspot-color); }
+.callout-body small { display: block; margin-top: 3px; padding-left: 13px; color: var(--muted); font-size: 10px; line-height: 1.35; }
+.callout-close { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; }
+.callout-close:hover { background: rgba(116,89,67,.09); }
+@keyframes callout-in { from { opacity: 0; transform: translateX(-6px) scale(.96); } }
+
+.hotspot-index { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 .auto-rotate {
   position: absolute;
@@ -336,14 +365,18 @@ button:focus-visible, input:focus-visible, canvas:focus-visible {
 .action-grid button.active { background: rgba(111,137,192,.1); box-shadow: inset 0 0 0 1px #8ca2d0; }
 
 .learning-cards {
+  /* Cap on the artwork box. The source illustrations are square, so this is
+     both the height and the width they letterbox into — raising it fills more
+     of the card but makes every card taller. */
+  --art-max: 178px;
   max-width: 1720px;
   margin: 18px auto 0;
   display: grid;
   grid-template-columns: 1.05fr repeat(5, 1fr);
   gap: 16px;
 }
-.learning-cards article { height: 205px; min-width: 0; border: 1px solid var(--line); border-radius: 23px; background: rgba(255,251,244,.68); box-shadow: var(--shadow); padding: 14px 14px 12px; display: flex; flex-direction: column; overflow: hidden; }
-.learning-cards article > header { display: flex; align-items: flex-start; justify-content: space-between; min-height: 41px; }
+.learning-cards article { min-height: 212px; min-width: 0; border: 1px solid var(--line); border-radius: 23px; background: rgba(255,251,244,.68); box-shadow: var(--shadow); padding: 13px 14px 12px; display: flex; flex-direction: column; overflow: hidden; }
+.learning-cards article > header { display: flex; align-items: flex-start; justify-content: space-between; min-height: 38px; flex: none; }
 .learning-cards em { display: block; text-transform: uppercase; font-size: 10px; }
 .learning-cards h3 { margin: 3px 0 0; font: 500 13px/1.2 var(--font-serif), serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .learning-cards article > button { margin-top: auto; width: 100%; min-height: 30px; }
@@ -351,22 +384,50 @@ button:focus-visible, input:focus-visible, canvas:focus-visible {
 .curiosity-card span { color: #c8a0b8; font-size: 28px; }
 .curiosity-card p { margin: 5px 0 10px; font: 500 16px/1.4 var(--font-serif), serif; }
 .curiosity-card em { text-transform: none; font-size: 13px; }
-.organ-card-image { position: relative; overflow: hidden; isolation: isolate; }
-.organ-card-image img { width: 100%; height: 100%; object-fit: cover; display: block; mix-blend-mode: multiply; animation: card-art-in .52s cubic-bezier(.2,.8,.3,1); }
+/* The artwork is square, so a square box spanning the full card width shows it
+   whole and as large as the column allows — never cropped, never stretched.
+   The cap keeps the cards sane when a breakpoint makes the columns very wide. */
+/* Stand-in for organs that ship as a 3D model without the painted asset set. */
+.art-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: radial-gradient(circle at 40% 32%, #fff, color-mix(in srgb, var(--art-accent), white 84%));
+  color: color-mix(in srgb, var(--art-accent), #5f4034 26%);
+  font-family: var(--font-serif), serif;
+  font-size: 34px;
+  line-height: 1;
+}
+.organ-card-image .art-fallback { font-size: 42px; }
+.organ-glyph .art-fallback { font-size: 21px; }
+.compare-organ > .art-fallback { position: absolute; left: 0; top: 50%; width: 38px; height: 38px; border-radius: 50%; transform: translateY(-50%); font-size: 17px; }
+.microscope-visual .art-fallback { font-size: 40px; }
+.modal-demo .art-fallback { font-size: 52px; }
+
+/* A square box matches the square source art, so the illustration fills the
+   card's full width — up to --art-max, which stops wide columns from making
+   the cards enormous. `contain` means nothing is ever cut. */
+.organ-card-image { position: relative; overflow: hidden; isolation: isolate; flex: none; aspect-ratio: 1; max-height: var(--art-max); margin: 5px 0 0; }
+.organ-card-image img { width: 100%; height: 100%; object-fit: contain; object-position: center; display: block; mix-blend-mode: multiply; animation: card-art-in .52s cubic-bezier(.2,.8,.3,1); }
 @keyframes card-art-in { from { opacity: 0; transform: scale(.96) translateY(4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-.microscope-visual { width: 108px; height: 108px; margin: 4px auto; border-radius: 50%; box-shadow: inset 0 0 0 5px rgba(255,255,255,.38), 0 6px 18px rgba(121,72,73,.08); }
-.microscope-visual img { border-radius: 50%; }
-.comparison-visual { flex: 1; min-height: 108px; margin: 0 -2px; border-radius: 12px; }
-.comparison-visual img { object-position: center 42%; }
-.function-visual { flex: 1; position: relative; display: grid; place-items: center; cursor: pointer; }
-.function-visual > img { object-fit: cover; object-position: center 42%; }
+/* The tissue swatch is a circular crop by design, so it keeps filling its mask
+   and stays square to avoid becoming an ellipse. */
+.microscope-visual { width: min(var(--art-max), 100%); max-height: none; margin: 4px auto 0; border-radius: 50%; box-shadow: inset 0 0 0 5px rgba(255,255,255,.38), 0 6px 18px rgba(121,72,73,.08); }
+.microscope-visual img { border-radius: 50%; object-fit: cover; }
+.comparison-visual { border-radius: 12px; }
+/* No footer button on this card, so the artwork centres in the leftover space. */
+.function-visual { margin: auto 0; position: relative; display: grid; place-items: center; cursor: pointer; }
+/* Centred grid items are not stretched, so `height: 100%` would resolve against
+   an indefinite row and overflow the card. Pin the artwork to the box instead. */
+.function-visual > img { position: absolute; inset: 0; }
 .function-pulse { position: absolute; width: 84px; height: 84px; border: 1px solid rgba(235,124,107,.32); border-radius: 50%; animation: organ-pulse 2.2s ease-out infinite; pointer-events: none; }
 @keyframes organ-pulse { 0% { opacity: .7; transform: scale(.62); } 80%,100% { opacity: 0; transform: scale(1.35); } }
 .function-visual button { position: absolute; width: 40px; height: 40px; border: 1px solid rgba(255,255,255,.8); border-radius: 50%; background: rgba(255,255,255,.7); color: #b4a99f; display: grid; place-items: center; cursor: pointer; box-shadow: 0 3px 12px rgba(0,0,0,.1); }
 .learning-cards ul { list-style: none; padding: 8px 0 0; margin: 0; display: flex; flex-direction: column; gap: 9px; font: 500 11px var(--font-serif), serif; }
 .learning-cards li:before { content: "♥"; color: #e9968b; margin-right: 7px; }
-.system-visual { flex: 1; margin: 4px -5px -8px; overflow: hidden; border-radius: 12px; }
-.system-visual img { object-position: center 42%; }
+.system-visual { margin: auto 0 0; overflow: hidden; border-radius: 12px; }
 
 .compare-strip { position: fixed; z-index: 20; left: 50%; bottom: 22px; transform: translateX(-50%); width: min(760px, calc(100% - 28px)); padding: 13px 16px; display: grid; grid-template-columns: 1fr auto 1fr 1.5fr auto; align-items: center; gap: 14px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,251,245,.94); backdrop-filter: blur(18px); box-shadow: 0 22px 60px rgba(64,43,29,.2); }
 .compare-strip > div { display: flex; flex-direction: column; }
@@ -402,8 +463,7 @@ button:focus-visible, input:focus-visible, canvas:focus-visible {
   .brand em { display: none; }
   .search-box { display: none; }
   .workspace { grid-template-columns: 250px minmax(500px,1fr) 300px; height: min(700px, calc(100vh - 105px)); }
-  .learning-cards { grid-template-columns: repeat(3, 1fr); }
-  .learning-cards article { height: 185px; }
+  .learning-cards { grid-template-columns: repeat(3, 1fr); --art-max: 230px; }
 }
 
 @media (max-width: 1040px) {
@@ -445,8 +505,8 @@ button:focus-visible, input:focus-visible, canvas:focus-visible {
   .organ-list { display: grid; grid-template-columns: 1fr 1fr; }
   .organ-item { min-height: 76px; }
   .info-panel { height: auto; margin-top: 10px; display: block; border-radius: 22px; }
-  .learning-cards { grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-  .learning-cards article { height: 190px; border-radius: 20px; }
+  .learning-cards { grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; --art-max: 240px; }
+  .learning-cards article { border-radius: 20px; }
   .curiosity-card { display: none !important; }
   .viewer-tools { top: auto; bottom: 12px; left: 10px; right: 10px; transform: none; width: auto; height: 61px; flex-direction: row; justify-content: space-around; padding: 4px; border-radius: 15px; }
   .tool-button { width: 51px; height: 51px; }
@@ -456,7 +516,7 @@ button:focus-visible, input:focus-visible, canvas:focus-visible {
   .view-caption { left: 12px; bottom: 84px; }
   .tip-note { width: 130px; min-height: 113px; padding: 11px; }
   .tip-note p { font-size: 12px; }
-  .hotspot > span { display: none; }
+  .callout-body { width: 148px; top: -26px; }
   .compare-strip { grid-template-columns: 1fr auto 1fr auto; }
   .compare-strip dl { display: none; }
 }
@@ -465,8 +525,7 @@ button:focus-visible, input:focus-visible, canvas:focus-visible {
   .brand strong { font-size: 25px; }
   .viewer-shell { min-height: 485px; height: 66vh; }
   .organ-list { grid-template-columns: 1fr; }
-  .learning-cards { grid-template-columns: 1fr; }
-  .learning-cards article { height: 185px; }
+  .learning-cards { grid-template-columns: 1fr; --art-max: 320px; }
   .organ-library .view-all { margin-bottom: 8px; }
   .tip-note { display: none; }
   .specimen-stamp { width: 68px; height: 68px; }
