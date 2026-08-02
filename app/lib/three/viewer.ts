@@ -53,13 +53,7 @@ export class AnatomyViewer {
   private busyUntil = 0;
   private loadRequest = 0;
 
-  // Adaptive resolution.
   private basePixelRatio: number;
-  private quality = 1;
-  private samples: number[] = [];
-  private lastRenderAt = 0;
-  private tick = 0;
-  private lastRenderTick = -1;
 
   private autoRotateWanted = true;
   private interactionUntil = 0;
@@ -78,7 +72,12 @@ export class AnatomyViewer {
     this.callbacks = callbacks;
 
     const lowPower = window.matchMedia("(max-width: 780px)").matches || (navigator.hardwareConcurrency ?? 8) < 6;
-    this.basePixelRatio = Math.min(window.devicePixelRatio, lowPower ? 1.1 : 1.5);
+    // Fixed, decided once. A dynamic controller used to live here and it was a
+    // net negative: frame *intervals* are vsync-quantised, so a brief hitch read
+    // as GPU load, dropped the buffer, and — because a vsync-locked 16.7ms never
+    // met the step-up threshold — never recovered. The scene renders in ~2ms, so
+    // there is nothing to adapt away from.
+    this.basePixelRatio = Math.min(window.devicePixelRatio, lowPower ? 1.5 : 2);
 
     this.renderer = new THREE.WebGLRenderer({
       antialias: !lowPower,
@@ -383,7 +382,6 @@ export class AnatomyViewer {
     this.frame = requestAnimationFrame(this.animate);
     if (!this.isVisible || !this.isPageVisible) return;
 
-    this.tick += 1;
     const delta = Math.min(this.clock.getDelta(), 0.05);
     const now = performance.now();
 
@@ -402,31 +400,7 @@ export class AnatomyViewer {
 
     this.positionCallout();
     this.renderer.render(this.scene, this.camera);
-    this.trackQuality(now);
   };
-
-  /** Steps the drawing buffer down when frames get long and back up when they
-   *  do not, so weaker GPUs stay interactive instead of dropping to a crawl. */
-  private trackQuality(now: number) {
-    // Only back-to-back rendered frames are real frame times. Sampling across
-    // an idle gap would read as a stall and needlessly drop the resolution.
-    const consecutive = this.tick === this.lastRenderTick + 1;
-    this.lastRenderTick = this.tick;
-    if (consecutive && this.lastRenderAt) this.samples.push(now - this.lastRenderAt);
-    this.lastRenderAt = now;
-    if (this.samples.length < 45) return;
-    const sorted = this.samples.slice().sort((a, b) => a - b);
-    const median = sorted[sorted.length >> 1];
-    this.samples.length = 0;
-    if (median > 23 && this.quality > 0.6) this.setQuality(this.quality - 0.2);
-    else if (median < 13 && this.quality < 1) this.setQuality(Math.min(1, this.quality + 0.2));
-  }
-
-  private setQuality(quality: number) {
-    this.quality = quality;
-    this.renderer.setPixelRatio(this.basePixelRatio * quality);
-    this.resize();
-  }
 
   private busy(seconds: number) {
     this.busyUntil = Math.max(this.busyUntil, performance.now() + seconds * 1000);

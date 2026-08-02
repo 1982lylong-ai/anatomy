@@ -25,7 +25,9 @@ export class AnatomyAssetManager {
   private maxAnisotropy: number;
 
   constructor(renderer: THREE.WebGLRenderer) {
-    this.maxAnisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+    // Anisotropy is what stops the texture detail from crawling at grazing
+    // angles, which is most of the shimmer on a rotating organ.
+    this.maxAnisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
     this.loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   }
 
@@ -87,7 +89,9 @@ export class AnatomyAssetManager {
     model.traverse((child) => {
       if (!(child instanceof THREE.Mesh)) return;
       meshes.push(child);
-      child.frustumCulled = true;
+      // One mesh per organ, always centred in frame — culling can only ever
+      // cost a wrong answer here, never save work.
+      child.frustumCulled = false;
       // Real-time shadow casting is replaced by a baked contact shadow, which
       // saves a full extra pass over the mesh every frame.
       child.castShadow = false;
@@ -99,24 +103,43 @@ export class AnatomyAssetManager {
         material.depthTest = true;
         material.side = THREE.FrontSide;
         if (material instanceof THREE.MeshStandardMaterial) {
-          material.roughness = THREE.MathUtils.clamp(material.roughness ?? 0.46, 0.34, 0.58);
+          // A tighter specular lobe sparkles on any surface with normal detail;
+          // holding roughness a little higher keeps highlights stable while the
+          // model turns.
+          material.roughness = THREE.MathUtils.clamp(material.roughness ?? 0.5, 0.42, 0.62);
           material.metalness = 0;
           material.envMapIntensity = 0.32;
           material.emissive.set(0x000000);
           material.emissiveIntensity = 0;
           if ("clearcoat" in material) {
             const physical = material as THREE.MeshPhysicalMaterial;
-            physical.clearcoat = Math.max(physical.clearcoat, 0.16);
-            physical.clearcoatRoughness = 0.48;
+            // A second, sharper specular lobe is the main source of crawling
+            // highlights, so keep it faint and broad.
+            physical.clearcoat = Math.min(Math.max(physical.clearcoat, 0.08), 0.12);
+            physical.clearcoatRoughness = 0.62;
             // Volume/transmission are per-pixel expensive and invisible here.
             physical.transmission = 0;
             physical.thickness = 0;
           }
-          if (material.map) {
-            material.map.colorSpace = THREE.SRGBColorSpace;
-            material.map.anisotropy = this.maxAnisotropy;
+          if (material.map) material.map.colorSpace = THREE.SRGBColorSpace;
+          if (material.normalMap) material.normalScale.multiplyScalar(0.62);
+          // Every sampled map needs anisotropy, not just the base colour —
+          // an aliasing normal or roughness map shimmers just as badly.
+          for (const map of [
+            material.map,
+            material.normalMap,
+            material.roughnessMap,
+            material.metalnessMap,
+            material.aoMap,
+            material.emissiveMap,
+          ]) {
+            if (!map) continue;
+            map.anisotropy = this.maxAnisotropy;
+            map.generateMipmaps = true;
+            map.minFilter = THREE.LinearMipmapLinearFilter;
+            map.magFilter = THREE.LinearFilter;
+            map.needsUpdate = true;
           }
-          if (material.normalMap) material.normalScale.multiplyScalar(0.72);
         }
         material.needsUpdate = true;
       });

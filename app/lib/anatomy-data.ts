@@ -33,6 +33,9 @@ export type Organ = {
   function: string;
   dailyFact: string;
   medical: string;
+  bloodSupply: string;
+  /** A single memorable line, surfaced as the "Did you know" note. */
+  funFact: string;
   tissue: string;
   comparison: string;
   conditions: string[];
@@ -59,9 +62,11 @@ export const organs: Organ[] = [
     function: "Circulates oxygenated blood",
     dailyFact: "Beats about 100,000 times",
     medical: "Its electrical rhythm coordinates every heartbeat.",
+    bloodSupply: "Left and right coronary arteries",
+    funFact: "It beats roughly 2.5 billion times in an average lifetime, and starts before you are born.",
     tissue: "Cardiac muscle tissue",
     comparison: "Heart vs. brain",
-    conditions: ["Coronary artery disease", "Arrhythmia", "Heart valve disorders"],
+    conditions: ["Coronary artery disease", "Arrhythmia", "Heart valve disorders", "Heart failure", "Cardiomyopathy", "Myocarditis", "Atrial fibrillation", "Congenital heart defects"],
     illustrated: true,
     hotspots: [
       { id: "aorta", label: "Aorta", detail: "Main artery", position: [-0.35, 1.65, 0.55], color: "#ee7c6a" },
@@ -88,9 +93,11 @@ export const organs: Organ[] = [
     function: "Processes and coordinates signals",
     dailyFact: "Uses about 20% of the body’s energy",
     medical: "Billions of neurons communicate through electrical and chemical signals.",
+    bloodSupply: "Internal carotid and vertebral arteries",
+    funFact: "It has no pain receptors of its own — a headache is felt in the tissues around it.",
     tissue: "Cerebral cortex",
     comparison: "Brain vs. eye",
-    conditions: ["Migraine", "Stroke", "Neurodegenerative disease"],
+    conditions: ["Migraine", "Stroke", "Neurodegenerative disease", "Epilepsy", "Traumatic brain injury", "Meningitis", "Multiple sclerosis", "Brain aneurysm"],
     illustrated: true,
     hotspots: [
       { id: "frontal", label: "Frontal Lobe", detail: "Planning & movement", position: [-0.7, 0.65, 0.8], color: "#ee7c6a" },
@@ -115,10 +122,12 @@ export const organs: Organ[] = [
     function: "Exchanges oxygen for carbon dioxide",
     dailyFact: "Moves around 11,000 L of air",
     medical: "Alveoli fold a tennis-court-sized exchange surface into the chest.",
+    bloodSupply: "Pulmonary and bronchial arteries",
+    funFact: "The right lung carries three lobes and the left only two, leaving a notch for the heart.",
     tissue: "Alveolar tissue",
     comparison: "Lungs vs. heart",
-    conditions: ["Asthma", "COPD", "Pneumonia"],
-    illustrated: false,
+    conditions: ["Asthma", "COPD", "Pneumonia", "Pulmonary embolism", "Pulmonary fibrosis", "Bronchitis", "Cystic fibrosis", "Lung cancer"],
+    illustrated: true,
     hotspots: [
       { id: "trachea", label: "Trachea", detail: "Carries air to the lungs", position: [0, 1.6, 0.2], color: "#6393d8" },
       { id: "right-lung", label: "Right Lung", detail: "Three lobes", position: [-1.2, 0.1, 0.7], color: "#ee7c6a" },
@@ -143,9 +152,11 @@ export const organs: Organ[] = [
     function: "Metabolism, detoxification & bile",
     dailyFact: "Performs more than 500 functions",
     medical: "It can regenerate a substantial portion of lost tissue.",
+    bloodSupply: "Hepatic artery and portal vein",
+    funFact: "It is the only human organ that can regrow to full size from a fraction of itself.",
     tissue: "Hepatic lobules",
     comparison: "Liver vs. intestine",
-    conditions: ["Fatty liver disease", "Hepatitis", "Cirrhosis"],
+    conditions: ["Fatty liver disease", "Hepatitis", "Cirrhosis", "Gallstones", "Haemochromatosis", "Liver cancer", "Autoimmune hepatitis", "Portal hypertension"],
     illustrated: true,
     hotspots: [
       { id: "right-lobe", label: "Right Lobe", detail: "Largest hepatic lobe", position: [-0.75, 0.35, 0.75], color: "#ee7c6a" },
@@ -169,9 +180,11 @@ export const organs: Organ[] = [
     function: "Filters blood and forms urine",
     dailyFact: "Filters roughly 180 L of fluid",
     medical: "Nephrons fine-tune the chemistry of the bloodstream.",
+    bloodSupply: "Renal arteries",
+    funFact: "They reclaim almost everything they filter — only about 1–2 L leaves the body as urine.",
     tissue: "Renal cortex",
     comparison: "Kidneys vs. liver",
-    conditions: ["Kidney stones", "Chronic kidney disease", "Urinary infection"],
+    conditions: ["Kidney stones", "Chronic kidney disease", "Urinary infection", "Glomerulonephritis", "Polycystic kidney disease", "Renal hypertension", "Acute kidney injury", "Nephrotic syndrome"],
     illustrated: true,
     hotspots: [
       { id: "cortex", label: "Renal Cortex", detail: "Outer filtering layer", position: [-0.9, 0.55, 0.7], color: "#ee7c6a" },
@@ -195,9 +208,11 @@ export const organs: Organ[] = [
     function: "Captures and focuses light",
     dailyFact: "Makes thousands of tiny movements",
     medical: "The retina is an extension of the central nervous system.",
+    bloodSupply: "Ophthalmic artery",
+    funFact: "The cornea carries no blood vessels at all; it takes oxygen directly from the air.",
     tissue: "Retinal layers",
     comparison: "Eye vs. brain",
-    conditions: ["Myopia", "Cataract", "Glaucoma"],
+    conditions: ["Myopia", "Cataract", "Glaucoma", "Macular degeneration", "Retinal detachment", "Dry eye disease", "Astigmatism", "Conjunctivitis"],
     illustrated: true,
     hotspots: [
       { id: "cornea", label: "Cornea", detail: "Clear focusing surface", position: [-0.94, 0.05, 1.47], color: "#6393d8" },
@@ -221,9 +236,11 @@ export const organs: Organ[] = [
     function: "Digestion and nutrient absorption",
     dailyFact: "Hosts trillions of microorganisms",
     medical: "Its surface is amplified by folds, villi, and microvilli.",
+    bloodSupply: "Superior and inferior mesenteric arteries",
+    funFact: "Its lining renews itself every few days — the fastest turnover of any tissue in the body.",
     tissue: "Intestinal villi",
     comparison: "Intestine vs. liver",
-    conditions: ["Irritable bowel syndrome", "Inflammatory bowel disease", "Celiac disease"],
+    conditions: ["Irritable bowel syndrome", "Inflammatory bowel disease", "Celiac disease", "Diverticulitis", "Intestinal obstruction", "Colorectal polyps", "Crohn's disease", "Lactose intolerance"],
     illustrated: true,
     hotspots: [
       { id: "duodenum", label: "Duodenum", detail: "First small-intestine segment", position: [0.6, 0.8, 0.75], color: "#f2a33b" },
@@ -247,10 +264,12 @@ export const organs: Organ[] = [
     function: "Digestive enzymes and insulin",
     dailyFact: "Makes about 1.5 L of enzyme-rich juice",
     medical: "Islets of Langerhans release insulin and glucagon to balance blood sugar.",
+    bloodSupply: "Splenic and pancreaticoduodenal arteries",
+    funFact: "Barely 2% of it makes hormones; the rest is given over to digestive enzymes.",
     tissue: "Pancreatic acini",
     comparison: "Pancreas vs. liver",
-    conditions: ["Pancreatitis", "Type 1 diabetes", "Pancreatic cancer"],
-    illustrated: false,
+    conditions: ["Pancreatitis", "Type 1 diabetes", "Pancreatic cancer", "Type 2 diabetes", "Exocrine insufficiency", "Pancreatic cysts", "Gallstone pancreatitis", "Insulinoma"],
+    illustrated: true,
     hotspots: [
       { id: "head", label: "Head", detail: "Cradled by the duodenum", position: [-1.32, -0.36, 0.55], color: "#ee7c6a" },
       { id: "body", label: "Body", detail: "Crosses the spine", position: [0.05, 0.25, 0.45], color: "#f2a33b" },
@@ -274,10 +293,12 @@ export const organs: Organ[] = [
     function: "Protects, senses, and cools",
     dailyFact: "Sheds around 500 million cells",
     medical: "Three layers — epidermis, dermis, and hypodermis — each with a distinct job.",
+    bloodSupply: "Dermal vascular plexus",
+    funFact: "A single square centimetre can hold hundreds of sweat glands and metres of blood vessels.",
     tissue: "Epidermal layers",
     comparison: "Skin vs. intestine",
-    conditions: ["Eczema", "Psoriasis", "Melanoma"],
-    illustrated: false,
+    conditions: ["Eczema", "Psoriasis", "Melanoma", "Acne vulgaris", "Cellulitis", "Contact dermatitis", "Rosacea", "Vitiligo"],
+    illustrated: true,
     hotspots: [
       { id: "epidermis", label: "Epidermis", detail: "Outer protective layer", position: [-0.05, 0.88, 1.4], color: "#ee7c6a" },
       { id: "dermis", label: "Dermis", detail: "Nerves, vessels & glands", position: [0.29, 0.05, 1.4], color: "#f2a33b" },

@@ -25,7 +25,7 @@ import {
 import { OrganViewer } from "./OrganViewer";
 import { organById, organs, type Organ, type OrganId } from "../lib/anatomy-data";
 
-type Modal = "lesson" | "quiz" | "animation" | null;
+type Modal = "lesson" | "quiz" | "animation" | "system" | null;
 
 /**
  * Renders an organ illustration, or its accent glyph for organs that ship as a
@@ -44,8 +44,11 @@ function OrganArt({
   size?: number;
 }) {
   if (!organ.illustrated) {
+    // An empty alt means a surrounding control already names this, so the
+    // glyph should be skipped rather than announced with no label.
+    const labelling = alt ? { role: "img", "aria-label": alt } : { "aria-hidden": true };
     return (
-      <span className="art-fallback" style={{ "--art-accent": organ.accent } as React.CSSProperties} role="img" aria-label={alt}>
+      <span className="art-fallback" style={{ "--art-accent": organ.accent } as React.CSSProperties} {...labelling}>
         {organ.icon}
       </span>
     );
@@ -187,8 +190,11 @@ export function AnatomyApp() {
             <div data-reveal><dt><span>♙</span> Weight</dt><dd>{organ.weight}</dd></div>
             <div data-reveal><dt><span>⌁</span> Daily</dt><dd>{organ.dailyFact}</dd></div>
             <div data-reveal><dt><span>⌖</span> Location</dt><dd>{organ.location}</dd></div>
+            <div data-reveal><dt><span>❋</span> Blood supply</dt><dd>{organ.bloodSupply}</dd></div>
+            <div data-reveal><dt><span>◈</span> Function</dt><dd>{organ.function}</dd></div>
           </dl>
           <div className="medical-note" data-reveal><Stethoscope size={16} /><p><b>Medical importance</b>{organ.medical}</p></div>
+          <div className="fun-note" data-reveal><Sparkles size={15} /><p><b>Did you know</b>{organ.funFact}</p></div>
           <button className="lesson-button" data-reveal onClick={() => setModal("lesson")}>View lesson <ArrowRight size={16} /></button>
           <div className="action-grid" data-reveal>
             <button onClick={() => setModal("animation")}><Play size={15} /> Animate</button>
@@ -224,7 +230,19 @@ export function AnatomyApp() {
         </article>
         <article>
           <header><div><em>Function animation</em><h3>{organ.function}</h3></div><Play size={17} /></header>
-          <div className="function-visual organ-card-image" onClick={() => setModal("animation")}><OrganArt organ={organ} asset="organ" alt={`${organ.name} function illustration`} /><i className="function-pulse" /><button aria-label="Play animation"><Play size={18} fill="currentColor" /></button></div>
+          {/* The artwork itself is the control, so the play badge inside it is
+              decorative rather than a nested button. */}
+          <button
+            type="button"
+            className="function-visual organ-card-image"
+            onClick={() => setModal("animation")}
+            aria-label={`Play the ${organ.name.toLowerCase()} function animation`}
+          >
+            <OrganArt organ={organ} asset="organ" alt="" />
+            <i className="function-pulse" />
+            <span className="play-badge"><Play size={18} fill="currentColor" /></span>
+          </button>
+          <button onClick={() => setModal("animation")}>Play animation <ArrowRight size={14} /></button>
         </article>
         <article>
           <header><div><em>Clinical notes</em><h3>Common conditions</h3></div><FileText size={17} /></header>
@@ -233,7 +251,15 @@ export function AnatomyApp() {
         </article>
         <article className="system-card">
           <header><div><em>Where it works</em><h3>{organ.system}</h3></div><BrainCircuit size={17} /></header>
-          <div className="system-visual organ-card-image"><OrganArt organ={organ} asset="location" alt={`${organ.name} location in the ${organ.system.toLowerCase()}`} /></div>
+          <button
+            type="button"
+            className="system-visual organ-card-image"
+            onClick={() => setModal("system")}
+            aria-label={`See where the ${organ.name.toLowerCase()} sits in the body`}
+          >
+            <OrganArt organ={organ} asset="location" alt="" />
+          </button>
+          <button onClick={() => setModal("system")}>See the system <ArrowRight size={14} /></button>
         </article>
       </section>
 
@@ -243,14 +269,34 @@ export function AnatomyApp() {
   );
 }
 
+const MODAL_ICON: Record<Exclude<Modal, null>, string> = {
+  quiz: "?",
+  animation: "▶",
+  system: "⌖",
+  lesson: "✦",
+};
+
 function LearningModal({ type, organ, onClose }: { type: Exclude<Modal, null>; organ: Organ; onClose: () => void }) {
   const organName = organ.name;
-  const title = type === "quiz" ? `${organName} quick quiz` : type === "animation" ? `${organName} in motion` : `Inside the ${organName.toLowerCase()}`;
+  const title =
+    type === "quiz" ? `${organName} quick quiz`
+    : type === "animation" ? `${organName} in motion`
+    // Avoids gluing onto `system`, whose wording varies per organ
+    // ("Cardiovascular" vs "Nervous System"), and stays grammatical for the
+    // plural organs too.
+    : type === "system" ? `${organName} in the body`
+    : `Inside the ${organName.toLowerCase()}`;
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
-      <section className="learning-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onMouseDown={(event) => event.stopPropagation()}>
+      <section
+        className={`learning-modal ${type === "system" ? "wide" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
         <button className="modal-close" onClick={onClose} aria-label="Close"><X size={18} /></button>
-        <span className="modal-icon">{type === "quiz" ? "?" : type === "animation" ? "▶" : "✦"}</span>
+        <span className="modal-icon">{MODAL_ICON[type]}</span>
         <em>Guided discovery</em>
         <h2 id="modal-title">{title}</h2>
         {type === "quiz" ? (
@@ -260,6 +306,21 @@ function LearningModal({ type, organ, onClose }: { type: Exclude<Modal, null>; o
             <button onClick={onClose}>It works completely independently</button>
             <button onClick={onClose}>It is active only during sleep</button>
           </div>
+        ) : type === "system" ? (
+          <>
+            <p>{organ.location}. Trace how the {organName.toLowerCase()} connects to the rest of the body.</p>
+            {/* Shown whole rather than cropped into the circular demo — the
+                point of this view is the figure and its vessels. */}
+            <figure className="modal-figure">
+              <OrganArt organ={organ} asset="location" alt={`${organName} shown in place within the ${organ.system.toLowerCase()}`} />
+            </figure>
+            <dl className="modal-facts">
+              <div><dt>System</dt><dd>{organ.system}</dd></div>
+              <div><dt>Primary role</dt><dd>{organ.function}</dd></div>
+              <div><dt>Blood supply</dt><dd>{organ.bloodSupply}</dd></div>
+            </dl>
+            <button className="lesson-button" onClick={onClose}>Continue exploring <ArrowRight size={16} /></button>
+          </>
         ) : (
           <>
             <p>Follow the highlighted structures, rotate the specimen, and connect form with function. This short study moment is designed to build a durable mental model.</p>
