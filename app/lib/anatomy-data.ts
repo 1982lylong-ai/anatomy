@@ -48,7 +48,7 @@ export const organs: Organ[] = [
     dailyFact: "Beats about 100,000 times",
     medical: "Its electrical rhythm coordinates every heartbeat.",
     tissue: "Cardiac muscle tissue",
-    comparison: "Heart vs. kidneys",
+    comparison: "Heart vs. brain",
     conditions: ["Coronary artery disease", "Arrhythmia", "Heart valve disorders"],
     hotspots: [
       { id: "aorta", label: "Aorta", detail: "Main artery", position: [-0.35, 1.65, 0.55], color: "#ee7c6a" },

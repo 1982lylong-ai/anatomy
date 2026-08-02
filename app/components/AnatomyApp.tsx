@@ -36,6 +36,7 @@ export function AnatomyApp() {
   const [mobileLibrary, setMobileLibrary] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const organ = organById[organId];
+  const assetBase = `/anatomy/${organ.id}`;
   const filteredOrgans = useMemo(
     () => organs.filter((item) => `${item.name} ${item.system}`.toLowerCase().includes(query.toLowerCase())),
     [query],
@@ -50,6 +51,10 @@ export function AnatomyApp() {
   }, [organId]);
 
   const selectOrgan = (id: OrganId) => {
+    ["organ", "microscopic", "compare", "location"].forEach((asset) => {
+      const image = new Image();
+      image.src = `/anatomy/${id}/${asset}.webp`;
+    });
     setOrganId(id);
     setMobileLibrary(false);
     setCompare(false);
@@ -93,7 +98,9 @@ export function AnatomyApp() {
                 onClick={() => selectOrgan(item.id)}
                 style={{ "--item-accent": item.accent } as React.CSSProperties}
               >
-                <span className="organ-glyph">{item.icon}</span>
+                <span className="organ-glyph">
+                  <img src={`/anatomy/${item.id}/thumb.webp`} alt="" width="47" height="47" loading="eager" decoding="async" />
+                </span>
                 <span><b>{item.name}</b><small>{item.system}</small></span>
                 {organId === item.id && <Heart className="favorite" size={14} fill="currentColor" />}
               </button>
@@ -119,7 +126,9 @@ export function AnatomyApp() {
           <div className="info-kicker" data-reveal><Heart size={13} fill="currentColor" /> The {organ.name}</div>
           <div className="info-title-row" data-reveal>
             <div><h1>{organ.name}</h1><em>{organ.poetic}</em></div>
-            <span className="specimen-stamp">{organ.icon}</span>
+            <span className="specimen-stamp">
+              <img key={organ.id} src={`${assetBase}/organ.webp`} alt={`${organ.name} anatomical illustration`} width="92" height="92" decoding="async" />
+            </span>
           </div>
           <p className="description" data-reveal>{organ.description}</p>
           <div className="rule" />
@@ -142,9 +151,9 @@ export function AnatomyApp() {
 
       {compare && (
         <section className="compare-strip" aria-label="Organ comparison">
-          <div><span>Comparing</span><strong>{organ.name}</strong><small>{organ.system}</small></div>
+          <div className="compare-organ"><img src={`${assetBase}/thumb.webp`} alt="" /><span>Comparing</span><strong>{organ.name}</strong><small>{organ.system}</small></div>
           <b>vs.</b>
-          <div><span>Reference</span><strong>{organ.id === "heart" ? "Brain" : "Heart"}</strong><small>{organ.id === "heart" ? "Nervous System" : "Cardiovascular"}</small></div>
+          <div className="compare-organ"><img src={`/anatomy/${organ.id === "heart" ? "brain" : "heart"}/thumb.webp`} alt="" /><span>Reference</span><strong>{organ.id === "heart" ? "Brain" : "Heart"}</strong><small>{organ.id === "heart" ? "Nervous System" : "Cardiovascular"}</small></div>
           <dl><div><dt>Primary role</dt><dd>{organ.function}</dd></div><div><dt>Scale</dt><dd>{organ.size}</dd></div></dl>
           <button onClick={() => setCompare(false)} aria-label="Close comparison"><X size={16} /></button>
         </section>
@@ -156,17 +165,17 @@ export function AnatomyApp() {
         </article>
         <article>
           <header><div><em>Microscopic view</em><h3>{organ.tissue}</h3></div><Microscope size={17} /></header>
-          <div className="microscope-visual"><i /><i /><i /><i /><i /></div>
+          <div className="microscope-visual organ-card-image"><img key={`${organ.id}-micro`} src={`${assetBase}/microscopic.webp`} alt={`${organ.name} microscopic tissue view`} loading="lazy" decoding="async" /></div>
           <button onClick={() => setModal("lesson")}>Explore tissue <ArrowRight size={14} /></button>
         </article>
         <article>
           <header><div><em>Compare organs</em><h3>{organ.comparison}</h3></div><Share2 size={17} /></header>
-          <div className="comparison-visual"><span>{organ.icon}</span><b>vs.</b><span>{organ.id === "heart" ? "◉" : "♥"}</span></div>
+          <div className="comparison-visual organ-card-image"><img key={`${organ.id}-compare`} src={`${assetBase}/compare.webp`} alt={`${organ.comparison} anatomical comparison`} loading="lazy" decoding="async" /></div>
           <button onClick={() => setCompare(true)}>Open comparison <ArrowRight size={14} /></button>
         </article>
         <article>
           <header><div><em>Function animation</em><h3>{organ.function}</h3></div><Play size={17} /></header>
-          <div className="function-visual" onClick={() => setModal("animation")}><span>{organ.icon}</span><button aria-label="Play animation"><Play size={18} fill="currentColor" /></button></div>
+          <div className="function-visual organ-card-image" onClick={() => setModal("animation")}><img key={`${organ.id}-function`} src={`${assetBase}/organ.webp`} alt={`${organ.name} function illustration`} loading="lazy" decoding="async" /><i className="function-pulse" /><button aria-label="Play animation"><Play size={18} fill="currentColor" /></button></div>
         </article>
         <article>
           <header><div><em>Clinical notes</em><h3>Common conditions</h3></div><FileText size={17} /></header>
@@ -175,17 +184,17 @@ export function AnatomyApp() {
         </article>
         <article className="system-card">
           <header><div><em>Where it works</em><h3>{organ.system}</h3></div><BrainCircuit size={17} /></header>
-          <div className="system-visual"><img src="/og.png" alt="Watercolor anatomical heart illustration" /></div>
+          <div className="system-visual organ-card-image"><img key={`${organ.id}-location`} src={`${assetBase}/location.webp`} alt={`${organ.name} location in the ${organ.system.toLowerCase()}`} loading="lazy" decoding="async" /></div>
         </article>
       </section>
 
-      {modal && <LearningModal type={modal} organName={organ.name} onClose={() => setModal(null)} />}
+      {modal && <LearningModal type={modal} organName={organ.name} organId={organ.id} onClose={() => setModal(null)} />}
       {mobileLibrary && <button className="drawer-backdrop" aria-label="Close library" onClick={() => setMobileLibrary(false)} />}
     </main>
   );
 }
 
-function LearningModal({ type, organName, onClose }: { type: Exclude<Modal, null>; organName: string; onClose: () => void }) {
+function LearningModal({ type, organName, organId, onClose }: { type: Exclude<Modal, null>; organName: string; organId: OrganId; onClose: () => void }) {
   const title = type === "quiz" ? `${organName} quick quiz` : type === "animation" ? `${organName} in motion` : `Inside the ${organName.toLowerCase()}`;
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
@@ -204,7 +213,7 @@ function LearningModal({ type, organName, onClose }: { type: Exclude<Modal, null
         ) : (
           <>
             <p>Follow the highlighted structures, rotate the specimen, and connect form with function. This short study moment is designed to build a durable mental model.</p>
-            <div className={`modal-demo ${type === "animation" ? "moving" : ""}`}><Heart size={58} strokeWidth={1.1} /></div>
+            <div className={`modal-demo ${type === "animation" ? "moving" : ""}`}><img src={`/anatomy/${organId}/organ.webp`} alt={`${organName} illustration`} /></div>
             <button className="lesson-button" onClick={onClose}>Continue exploring <ArrowRight size={16} /></button>
           </>
         )}

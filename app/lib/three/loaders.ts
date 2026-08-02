@@ -1,24 +1,17 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
-import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { disposeObject } from "./dispose";
 
 export class AnatomyAssetManager {
   private loader: GLTFLoader;
-  private draco: DRACOLoader;
-  private ktx2: KTX2Loader;
   private active: THREE.Group | null = null;
   private mixer: THREE.AnimationMixer | null = null;
+  private maxAnisotropy: number;
 
   constructor(renderer: THREE.WebGLRenderer) {
-    this.draco = new DRACOLoader().setDecoderPath("/draco/");
-    this.ktx2 = new KTX2Loader().setTranscoderPath("/basis/").detectSupport(renderer);
-    this.loader = new GLTFLoader()
-      .setDRACOLoader(this.draco)
-      .setKTX2Loader(this.ktx2)
-      .setMeshoptDecoder(MeshoptDecoder);
+    this.maxAnisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    this.loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   }
 
   async load(url: string, onProgress?: (progress: number) => void) {
@@ -41,13 +34,28 @@ export class AnatomyAssetManager {
       child.frustumCulled = true;
       const materials = Array.isArray(child.material) ? child.material : [child.material];
       materials.forEach((material) => {
-        material.transparent = true;
+        material.transparent = false;
         material.opacity = 1;
+        material.depthWrite = true;
+        material.depthTest = true;
         if (material instanceof THREE.MeshStandardMaterial) {
-          material.roughness = Math.min(material.roughness ?? 0.55, 0.62);
+          material.roughness = THREE.MathUtils.clamp(material.roughness ?? 0.46, 0.34, 0.58);
           material.metalness = 0;
-          material.envMapIntensity = 0.72;
+          material.envMapIntensity = 1;
+          material.emissive.set(0x000000);
+          material.emissiveIntensity = 0;
+          if ("clearcoat" in material) {
+            const physical = material as THREE.MeshPhysicalMaterial;
+            physical.clearcoat = Math.max(physical.clearcoat, 0.16);
+            physical.clearcoatRoughness = 0.48;
+          }
+          if (material.map) {
+            material.map.colorSpace = THREE.SRGBColorSpace;
+            material.map.anisotropy = this.maxAnisotropy;
+          }
+          if (material.normalMap) material.normalScale.multiplyScalar(0.72);
         }
+        material.needsUpdate = true;
       });
     });
 
@@ -75,7 +83,5 @@ export class AnatomyAssetManager {
 
   dispose() {
     this.release();
-    this.draco.dispose();
-    this.ktx2.dispose();
   }
 }

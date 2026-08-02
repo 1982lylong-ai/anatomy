@@ -12,7 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { Organ } from "../lib/anatomy-data";
-import { AnatomyViewer, type ProjectedHotspot } from "../lib/three/viewer";
+import type { AnatomyViewer, ProjectedHotspot } from "../lib/three/viewer";
 
 type Props = {
   organ: Organ;
@@ -25,6 +25,8 @@ type Props = {
 export function OrganViewer({ organ, autoRotate, onAutoRotate, compare, onCompare }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<AnatomyViewer | null>(null);
+  const organRef = useRef(organ);
+  const autoRotateRef = useRef(autoRotate);
   const [hotspots, setHotspots] = useState<ProjectedHotspot[]>([]);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -32,16 +34,40 @@ export function OrganViewer({ organ, autoRotate, onAutoRotate, compare, onCompar
   const [selectedHotspot, setSelectedHotspot] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!mountRef.current) return;
-    const viewer = new AnatomyViewer(mountRef.current, {
-      onHotspots: setHotspots,
-      onLoading: (isLoading, value) => {
-        setLoading(isLoading);
-        setProgress(value);
-      },
+    organRef.current = organ;
+  }, [organ]);
+
+  useEffect(() => {
+    autoRotateRef.current = autoRotate;
+  }, [autoRotate]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let viewer: AnatomyViewer | null = null;
+
+    void import("../lib/three/viewer").then(({ AnatomyViewer: Viewer }) => {
+      if (cancelled || !mountRef.current) return;
+      viewer = new Viewer(mountRef.current, {
+        onHotspots: setHotspots,
+        onLoading: (isLoading, value) => {
+          setLoading(isLoading);
+          setProgress(value);
+        },
+      });
+      viewerRef.current = viewer;
+      viewer.setAutoRotate(autoRotateRef.current);
+      const current = organRef.current;
+      viewer.setOrgan(current.model, current.hotspots, current.accent).catch(() => {
+        setLoading(false);
+        setProgress(0);
+      });
     });
-    viewerRef.current = viewer;
-    return () => viewer.dispose();
+
+    return () => {
+      cancelled = true;
+      viewerRef.current = null;
+      viewer?.dispose();
+    };
   }, []);
 
   useEffect(() => {
@@ -53,7 +79,7 @@ export function OrganViewer({ organ, autoRotate, onAutoRotate, compare, onCompar
 
   useEffect(() => viewerRef.current?.setAutoRotate(autoRotate), [autoRotate]);
 
-  const useTool = (tool: string) => {
+  const handleTool = (tool: string) => {
     const viewer = viewerRef.current;
     if (!viewer) return;
     if (tool === "rotate") onAutoRotate(!autoRotate);
@@ -89,7 +115,7 @@ export function OrganViewer({ organ, autoRotate, onAutoRotate, compare, onCompar
             key={id}
             type="button"
             className={`tool-button ${(activeTool === id || (id === "compare" && compare)) ? "active" : ""}`}
-            onClick={() => useTool(id)}
+            onClick={() => handleTool(id)}
             aria-pressed={activeTool === id || (id === "compare" && compare)}
             title={label}
           >
