@@ -52,6 +52,10 @@ export type UiDictionary = {
     exploreTissue: string; openComparison: string; playAnimation: string; seeAll: string; seeSystem: string;
     playAria: string; systemAria: string;
   };
+  quiz: {
+    start: string; find: string; progress: string; correct: string; wrong: string;
+    reveal: string; done: string; score: string; retry: string; exit: string; hint: string;
+  };
   modal: {
     guided: string; close: string; continueExploring: string;
     quizTitle: string; motionTitle: string; bodyTitle: string; insideTitle: string;

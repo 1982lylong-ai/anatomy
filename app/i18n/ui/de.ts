@@ -49,6 +49,12 @@ export const ui: UiDictionary = {
     seeAll: "Alle ansehen", seeSystem: "System ansehen",
     playAria: "Funktionsanimation abspielen: {organ}", systemAria: "Sehen, wo {organ} im Körper liegt",
   },
+  quiz: {
+    start: "Beschriftungsquiz starten", find: "Finde", progress: "{current} von {total}",
+    correct: "Richtig", wrong: "Nicht ganz", reveal: "Das ist: {label}",
+    done: "Quiz beendet", score: "{score} von {total} richtig", retry: "Nochmal",
+    exit: "Quiz verlassen", hint: "Klicke den passenden Punkt am Modell an",
+  },
   modal: {
     guided: "Geführte Entdeckung", close: "Schließen", continueExploring: "Weiter entdecken",
     quizTitle: "Kurzquiz: {organ}", motionTitle: "{organ} in Bewegung",

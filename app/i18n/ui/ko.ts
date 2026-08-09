@@ -49,6 +49,12 @@ export const ui: UiDictionary = {
     seeAll: "전체 보기", seeSystem: "계통 보기",
     playAria: "{organ} 기능 애니메이션 재생", systemAria: "몸에서 {organ}의 위치 보기",
   },
+  quiz: {
+    start: "이름 맞히기 퀴즈 시작", find: "찾아보세요:", progress: "{total}문제 중 {current}번",
+    correct: "정답", wrong: "아쉬워요", reveal: "그것은 {label}입니다",
+    done: "퀴즈 완료", score: "{total}문제 중 {score}문제 정답", retry: "다시 풀기",
+    exit: "퀴즈 끝내기", hint: "모델에서 해당하는 점을 클릭하세요",
+  },
   modal: {
     guided: "안내 탐색", close: "닫기", continueExploring: "계속 탐색하기",
     quizTitle: "{organ} 빠른 퀴즈", motionTitle: "움직이는 {organ}",

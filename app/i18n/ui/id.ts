@@ -49,6 +49,12 @@ export const ui: UiDictionary = {
     seeAll: "Lihat semua", seeSystem: "Lihat sistemnya",
     playAria: "Putar animasi fungsi: {organ}", systemAria: "Lihat letak {organ} di dalam tubuh",
   },
+  quiz: {
+    start: "Mulai kuis penamaan", find: "Temukan", progress: "{current} dari {total}",
+    correct: "Benar", wrong: "Belum tepat", reveal: "Itu adalah {label}",
+    done: "Kuis selesai", score: "{score} dari {total} benar", retry: "Coba lagi",
+    exit: "Keluar dari kuis", hint: "Klik titik yang sesuai pada model",
+  },
   modal: {
     guided: "Penjelajahan terpandu", close: "Tutup", continueExploring: "Lanjutkan menjelajah",
     quizTitle: "Kuis singkat: {organ}", motionTitle: "{organ} dalam gerak",

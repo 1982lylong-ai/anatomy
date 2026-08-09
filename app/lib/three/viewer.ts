@@ -8,6 +8,10 @@ import { HotspotLayer } from "./hotspots";
 type ViewerCallbacks = {
   onLoading: (loading: boolean, progress: number) => void;
   onSelect: (hotspot: Hotspot | null) => void;
+  /** Quiz mode: every dot press is reported, with no selection toggling. */
+  onPick?: (hotspot: Hotspot) => void;
+  /** Authoring mode: a point on the mesh surface, in pivot space. */
+  onAuthorPoint?: (point: { x: number; y: number; z: number }) => void;
 };
 
 const DOT_PIXELS = 34;
@@ -66,6 +70,9 @@ export class AnatomyViewer {
   private calloutEl: HTMLElement | null = null;
   private fadeTween: gsap.core.Tween | null = null;
   private disposed = false;
+  private quizMode = false;
+  private authoring = false;
+  private authorRaycaster = new THREE.Raycaster();
 
   constructor(container: HTMLElement, callbacks: ViewerCallbacks) {
     this.container = container;
@@ -459,9 +466,60 @@ export class AnatomyViewer {
     this.pointerId = null;
     this.dragged = false;
     if (wasDragging) return;
+
+    // Authoring takes precedence: it wants a point on the mesh, not a marker.
+    if (this.authoring) {
+      this.captureAuthorPoint(event.offsetX, event.offsetY);
+      return;
+    }
+
     const marker = this.hotspots.pick(event.offsetX, event.offsetY, this.camera, this.width, this.height);
+    if (this.quizMode) {
+      // Every press counts as an answer, so no toggling and no sticky selection.
+      if (marker) this.callbacks.onPick?.(marker.hotspot);
+      return;
+    }
     this.select(marker && marker.hotspot.id !== this.selectedId ? marker.hotspot.id : null);
   };
+
+  /**
+   * Raycasts the actual mesh and reports the hit in pivot space — the same
+   * coordinate system `anatomy-data.ts` authors hotspots in. Only ever runs on
+   * a deliberate click in authoring mode, so its cost never touches the
+   * interactive path.
+   */
+  private captureAuthorPoint(px: number, py: number) {
+    if (!this.organ) return;
+    const ndc = new THREE.Vector2((px / this.width) * 2 - 1, -(py / this.height) * 2 + 1);
+    this.authorRaycaster.setFromCamera(ndc, this.camera);
+    const hit = this.authorRaycaster.intersectObjects(this.organ.meshes, false)[0];
+    if (!hit) return;
+    const local = this.organ.pivot.worldToLocal(hit.point.clone());
+    this.callbacks.onAuthorPoint?.({
+      x: +local.x.toFixed(2),
+      y: +local.y.toFixed(2),
+      z: +local.z.toFixed(2),
+    });
+  }
+
+  setQuizMode(enabled: boolean) {
+    this.quizMode = enabled;
+    this.select(null);
+    this.hotspots.clearFlash();
+    this.dirty = true;
+  }
+
+  setAuthoring(enabled: boolean) {
+    this.authoring = enabled;
+    this.renderer.domElement.style.cursor = enabled ? "crosshair" : "";
+    this.dirty = true;
+  }
+
+  /** Green/red ring on a dot after a quiz answer. */
+  flash(id: string, correct: boolean) {
+    this.hotspots.flash(id, correct);
+    this.busy(1.1);
+  }
 
   private onPointerLeave = () => {
     this.pointerId = null;

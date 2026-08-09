@@ -661,3 +661,113 @@ button.organ-card-image:focus-visible { outline: 2px solid #8b6fc4; outline-offs
   --font-serif: "AppleMyungjo", "Nanum Myeongjo", "Batang", "Noto Serif CJK KR", serif;
   --font-sans: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans CJK KR", sans-serif;
 }
+
+/* ------------------------------------------------------- labelling quiz --- */
+
+/* The prompt sits over the canvas, because the model *is* the answer sheet. */
+.quiz-bar {
+  position: absolute;
+  z-index: 6;
+  inset-inline: 90px 16px;
+  top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 10px 15px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255,252,247,.93);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 26px rgba(75,54,40,.1);
+}
+.quiz-bar .quiz-progress {
+  flex: none;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(238,124,106,.1);
+  color: var(--coral);
+  font-size: 10px;
+  letter-spacing: .06em;
+}
+.quiz-bar strong { font: 500 14px var(--font-serif), serif; }
+.quiz-bar strong b { color: var(--coral); }
+.quiz-bar small { margin-inline-start: auto; color: var(--muted); font-size: 10px; }
+.quiz-bar > button {
+  flex: none;
+  width: 28px; height: 28px;
+  display: grid; place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.quiz-answer {
+  position: absolute;
+  z-index: 7;
+  left: 50%;
+  top: 74px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font: 500 12px var(--font-serif), serif;
+  animation: callout-in .22s cubic-bezier(.2,.85,.3,1);
+  box-shadow: 0 8px 20px rgba(75,54,40,.12);
+}
+.quiz-answer.ok { background: #e7f2e8; color: #3f6f4c; }
+.quiz-answer.no { background: #fbe6e4; color: #a8433a; }
+
+.quiz-summary {
+  position: absolute;
+  z-index: 8;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(300px, calc(100% - 40px));
+  padding: 26px 24px 22px;
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: #fffaf2;
+  box-shadow: 0 26px 70px rgba(63,42,28,.22);
+  animation: modal-in .32s cubic-bezier(.2,.85,.3,1);
+}
+.quiz-summary h2 { margin: 4px 0 6px; font: 500 26px var(--font-serif), serif; }
+.quiz-summary p { margin: 0; color: #6e655f; font: 500 14px var(--font-serif), serif; }
+.quiz-summary-actions { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; }
+.quiz-summary-actions > button:last-child {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  font: 500 11px var(--font-serif), serif;
+}
+
+/* Coordinate probe for placing hotspots. Opt-in via ?authoring=1. */
+.authoring-panel {
+  position: absolute;
+  z-index: 8;
+  inset-inline-start: 90px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 190px);
+  padding: 8px 10px;
+  border: 1px dashed rgba(117,91,70,.4);
+  border-radius: 12px;
+  background: rgba(255,252,247,.95);
+  font-size: 11px;
+}
+.authoring-panel > span { display: flex; align-items: center; gap: 5px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-size: 9px; }
+.authoring-panel code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.authoring-panel button { flex: none; padding: 4px 9px; border: 1px solid var(--line); border-radius: 7px; background: rgba(255,255,255,.5); cursor: pointer; font-size: 10px; }
+
+@media (max-width: 760px) {
+  .quiz-bar { inset-inline: 10px; top: 10px; flex-wrap: wrap; gap: 8px; }
+  .quiz-bar small { display: none; }
+  .authoring-panel { inset-inline-start: 10px; max-width: calc(100% - 20px); bottom: 82px; }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   Box,
   CircleDashed,
@@ -9,6 +9,8 @@ import {
   RotateCcw,
   ScanLine,
   Search,
+  Check,
+  Crosshair,
   Sparkles,
   X,
 } from "lucide-react";
@@ -23,9 +25,112 @@ type Props = {
   onAutoRotate: (enabled: boolean) => void;
   compare: boolean;
   onCompare: () => void;
+  quizActive: boolean;
+  onQuizExit: () => void;
 };
 
-export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCompare }: Props) {
+/** Fisher–Yates. The quiz asks for every structure once, in a fresh order. */
+function shuffle<T>(items: T[]): T[] {
+  const out = [...items];
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+type PickRef = { current: (hotspot: Hotspot) => void };
+
+/**
+ * The labelling quiz. Owns its own round state and is mounted with a `key` per
+ * organ, so switching specimens restarts it without a resetting effect.
+ */
+function LabelQuiz({
+  hotspots, t, pickRef, flash, onExit,
+}: {
+  hotspots: Hotspot[];
+  t: UiDictionary;
+  pickRef: PickRef;
+  flash: (id: string, correct: boolean) => void;
+  onExit: () => void;
+}) {
+  const [seed, setSeed] = useState(0);
+  const [step, setStep] = useState(0);
+  const [score, setScore] = useState(0);
+  const [answer, setAnswer] = useState<{ correct: boolean; label: string } | null>(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const order = useMemo(() => shuffle(hotspots), [hotspots, seed]);
+  const target = order[step];
+  const finished = step >= order.length;
+
+  // Refreshed after every render so the viewer's long-lived callback always
+  // sees the current question. Writing a ref in an effect is safe; writing one
+  // during render is not.
+  useEffect(() => {
+    pickRef.current = (hotspot) => {
+      if (!target) return;
+      const correct = hotspot.id === target.id;
+      flash(hotspot.id, correct);
+      setAnswer({ correct, label: correct ? target.label : hotspot.label });
+      if (correct) setScore((value) => value + 1);
+      window.setTimeout(() => {
+        setAnswer(null);
+        setStep((value) => value + 1);
+      }, 1100);
+    };
+  });
+
+  const retry = () => {
+    setStep(0);
+    setScore(0);
+    setAnswer(null);
+    setSeed((value) => value + 1);
+  };
+
+  return (
+    <>
+      {target && (
+        <div className="quiz-bar" role="status" aria-live="polite">
+          <span className="quiz-progress">{format(t.quiz.progress, { current: String(step + 1), total: String(order.length) })}</span>
+          <strong>{t.quiz.find} <b>{target.label}</b></strong>
+          <small>{t.quiz.hint}</small>
+          <button type="button" onClick={onExit} aria-label={t.quiz.exit}><X size={15} /></button>
+        </div>
+      )}
+
+      {answer && (
+        <div className={`quiz-answer ${answer.correct ? "ok" : "no"}`} role="status" aria-live="assertive">
+          {answer.correct
+            ? <><Check size={15} /> {t.quiz.correct}</>
+            : <><X size={15} /> {t.quiz.wrong} · {format(t.quiz.reveal, { label: answer.label })}</>}
+        </div>
+      )}
+
+      {finished && (
+        <div className="quiz-summary" role="dialog" aria-modal="true">
+          <span className="modal-icon">{score === order.length ? "★" : "✓"}</span>
+          <h2>{t.quiz.done}</h2>
+          <p>{format(t.quiz.score, { score: String(score), total: String(order.length) })}</p>
+          <div className="quiz-summary-actions">
+            <button type="button" className="lesson-button" onClick={retry}>{t.quiz.retry}</button>
+            <button type="button" onClick={onExit}>{t.quiz.exit}</button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/** `?authoring=1` is read from the URL without a hydration mismatch. */
+function useAuthoringFlag() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => new URLSearchParams(window.location.search).get("authoring") === "1",
+    () => false,
+  );
+}
+
+export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCompare, quizActive, onQuizExit }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<AnatomyViewer | null>(null);
   const organRef = useRef(organ);
@@ -36,6 +141,22 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
   const [progress, setProgress] = useState(0);
   const [slowLoad, setSlowLoad] = useState(false);
   const [activeTool, setActiveTool] = useState<string | null>(null);
+
+  // Opt-in coordinate probe for placing hotspots — not a user-facing feature.
+  const authoring = useAuthoringFlag();
+  const authoringRef = useRef(authoring);
+  const [authorPoint, setAuthorPoint] = useState<{ x: number; y: number; z: number } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  // The viewer captures its callbacks once, so live handlers go through refs.
+  const pickRef = useRef<(hotspot: Hotspot) => void>(() => {});
+  const authorRef = useRef<(point: { x: number; y: number; z: number }) => void>(() => {});
+  useEffect(() => {
+    authorRef.current = setAuthorPoint;
+  }, []);
+  useEffect(() => {
+    authoringRef.current = authoring;
+  }, [authoring]);
 
   // A typical organ is ready well inside a second — flashing a loading panel for
   // that reads as jank. It only appears if the fetch is genuinely slow; the flag
@@ -72,10 +193,13 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
           setProgress(value);
           if (isLoading) setSlowLoad(false);
         },
+        onPick: (hotspot) => pickRef.current(hotspot),
+        onAuthorPoint: (point) => authorRef.current(point),
       });
       viewerRef.current = viewer;
       viewer.setCanvasLabel(canvasLabelRef.current);
       viewer.setAutoRotate(autoRotateRef.current);
+      viewer.setAuthoring(authoringRef.current);
       const current = organRef.current;
       viewer.setOrgan(current.model, current.hotspots, current.accent).catch(() => {
         setLoading(false);
@@ -98,6 +222,9 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
   }, [organ]);
 
   useEffect(() => viewerRef.current?.setAutoRotate(autoRotate), [autoRotate]);
+  useEffect(() => viewerRef.current?.setQuizMode(quizActive), [quizActive]);
+  useEffect(() => viewerRef.current?.setAuthoring(authoring), [authoring]);
+
 
   // The viewer drives the callout's position directly, so a spinning model
   // never costs a React render.
@@ -151,12 +278,14 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
         ))}
       </div>
 
+      {!quizActive && (
       <aside className="tip-note" aria-label={t.viewer.tip}>
         <span><Sparkles size={15} /> {t.viewer.tip}</span>
         <p>{t.viewer.tipDrag}<br />{t.viewer.tipScroll}<br />{t.viewer.tipClick}</p>
       </aside>
+      )}
 
-      {selected && (
+      {selected && !quizActive && (
         <div className="hotspot-callout" ref={calloutRef} data-side="right">
           <div className="callout-body" style={{ "--hotspot-color": selected.color } as React.CSSProperties}>
             <button className="callout-close" type="button" onClick={() => viewerRef.current?.clearSelection()} aria-label={t.modal.close}>
@@ -174,6 +303,40 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
           <li key={hotspot.id}>{hotspot.label}: {hotspot.detail}</li>
         ))}
       </ul>
+
+      {quizActive && (
+        <LabelQuiz
+          key={organ.id}
+          hotspots={organ.hotspots}
+          t={t}
+          pickRef={pickRef}
+          flash={(id, correct) => viewerRef.current?.flash(id, correct)}
+          onExit={onQuizExit}
+        />
+      )}
+
+      {authoring && (
+        <div className="authoring-panel">
+          <span><Crosshair size={13} /> authoring</span>
+          {authorPoint ? (
+            <>
+              <code>{`{ id: "", ta: "", position: [${authorPoint.x}, ${authorPoint.y}, ${authorPoint.z}], color: "#ee7c6a" },`}</code>
+              <button
+                type="button"
+                onClick={() => {
+                  void navigator.clipboard
+                    .writeText(`{ id: "", ta: "", position: [${authorPoint.x}, ${authorPoint.y}, ${authorPoint.z}], color: "#ee7c6a" },`)
+                    .then(() => { setCopied(true); window.setTimeout(() => setCopied(false), 1200); });
+                }}
+              >
+                {copied ? "copied" : "copy"}
+              </button>
+            </>
+          ) : (
+            <code>click the model to sample a point</code>
+          )}
+        </div>
+      )}
 
       {loading && slowLoad && (
         <div className="model-loader" role="status" aria-live="polite">

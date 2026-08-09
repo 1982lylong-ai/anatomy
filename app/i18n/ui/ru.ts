@@ -49,6 +49,12 @@ export const ui: UiDictionary = {
     seeAll: "Показать все", seeSystem: "Открыть систему",
     playAria: "Запустить анимацию функции: {organ}", systemAria: "Посмотреть, где в теле находится {organ}",
   },
+  quiz: {
+    start: "Начать тест на распознавание", find: "Найдите", progress: "{current} из {total}",
+    correct: "Верно", wrong: "Не совсем", reveal: "Это {label}",
+    done: "Тест завершён", score: "{score} из {total} верно", retry: "Пройти снова",
+    exit: "Выйти из теста", hint: "Нажмите на соответствующую точку на модели",
+  },
   modal: {
     guided: "Направленное открытие", close: "Закрыть", continueExploring: "Продолжить изучение",
     quizTitle: "Быстрый тест: {organ}", motionTitle: "{organ} в движении",

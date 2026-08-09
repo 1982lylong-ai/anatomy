@@ -49,6 +49,12 @@ export const ui: UiDictionary = {
     seeAll: "عرض الكل", seeSystem: "عرض الجهاز",
     playAria: "تشغيل الرسم المتحرك لوظيفة {organ}", systemAria: "شاهد موضع {organ} في الجسم",
   },
+  quiz: {
+    start: "ابدأ اختبار التسمية", find: "حدِّد", progress: "{current} من {total}",
+    correct: "صحيح", wrong: "ليس تمامًا", reveal: "هذا هو {label}",
+    done: "انتهى الاختبار", score: "{score} من {total} صحيحة", retry: "حاول مرة أخرى",
+    exit: "إنهاء الاختبار", hint: "انقر على النقطة المقابلة في النموذج",
+  },
   modal: {
     guided: "اكتشاف موجَّه", close: "إغلاق", continueExploring: "واصل الاستكشاف",
     quizTitle: "اختبار سريع: {organ}", motionTitle: "{organ} في حركة",

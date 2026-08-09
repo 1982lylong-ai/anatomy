@@ -127,6 +127,7 @@ export function AnatomyApp({ locale, dictionary }: { locale: LocaleConfig; dicti
   const [modal, setModal] = useState<Modal>(null);
   const [query, setQuery] = useState("");
   const [mobileLibrary, setMobileLibrary] = useState(false);
+  const [quizActive, setQuizActive] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const prefetched = useRef(new Set<OrganId>());
   const organ = organById[organId];
@@ -157,6 +158,7 @@ export function AnatomyApp({ locale, dictionary }: { locale: LocaleConfig; dicti
     setOrganId(id);
     setMobileLibrary(false);
     setCompare(false);
+    setQuizActive(false);
   };
 
   // Warms the model in the HTTP cache while the pointer is still travelling,
@@ -231,6 +233,8 @@ export function AnatomyApp({ locale, dictionary }: { locale: LocaleConfig; dicti
           onAutoRotate={setAutoRotate}
           compare={compare}
           onCompare={() => setCompare(!compare)}
+          quizActive={quizActive}
+          onQuizExit={() => setQuizActive(false)}
         />
 
         <aside className="info-panel" ref={contentRef}>
@@ -257,7 +261,7 @@ export function AnatomyApp({ locale, dictionary }: { locale: LocaleConfig; dicti
           <button className="lesson-button" data-reveal onClick={() => setModal("lesson")}>{t.info.viewLesson} <ArrowRight size={16} /></button>
           <div className="action-grid" data-reveal>
             <button onClick={() => setModal("animation")}><Play size={15} /> {t.info.animate}</button>
-            <button onClick={() => setModal("quiz")}><CircleHelp size={15} /> {t.info.quiz}</button>
+            <button onClick={() => { setQuizActive(true); setModal(null); }}><CircleHelp size={15} /> {t.info.quiz}</button>
             <button onClick={() => setCompare(!compare)} className={compare ? "active" : ""}><Share2 size={15} /> {t.info.compare}</button>
           </div>
         </aside>

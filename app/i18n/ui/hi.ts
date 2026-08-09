@@ -49,6 +49,12 @@ export const ui: UiDictionary = {
     seeAll: "सभी देखें", seeSystem: "तंत्र देखें",
     playAria: "{organ} का कार्य एनिमेशन चलाएँ", systemAria: "शरीर में {organ} की स्थिति देखें",
   },
+  quiz: {
+    start: "पहचान प्रश्नोत्तरी शुरू करें", find: "खोजें", progress: "{total} में से {current}",
+    correct: "सही", wrong: "बिलकुल नहीं", reveal: "वह है {label}",
+    done: "प्रश्नोत्तरी पूर्ण", score: "{total} में से {score} सही", retry: "फिर से प्रयास करें",
+    exit: "प्रश्नोत्तरी छोड़ें", hint: "मॉडल पर संबंधित बिंदु क्लिक करें",
+  },
   modal: {
     guided: "निर्देशित खोज", close: "बंद करें", continueExploring: "खोज जारी रखें",
     quizTitle: "{organ} — त्वरित प्रश्नोत्तरी", motionTitle: "{organ} गति में",

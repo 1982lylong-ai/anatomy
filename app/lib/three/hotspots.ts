@@ -27,6 +27,10 @@ const VIEW_LIFT = 0.3;
 /** The selection ring beats for a few seconds and then rests, so an open
  *  callout does not keep the renderer awake indefinitely. */
 const PULSE_SECONDS = 4.5;
+/** How long a quiz answer stays tinted on the dot. */
+const FLASH_SECONDS = 1;
+const FLASH_CORRECT = "#5c9e6b";
+const FLASH_WRONG = "#d1584f";
 
 function rgba(color: THREE.Color, alpha: number) {
   const r = Math.round(color.r * 255);
@@ -101,6 +105,8 @@ export class HotspotLayer {
   private time = 0;
   private selectedAt = -PULSE_SECONDS;
   private lastSelectedId: string | null = null;
+  /** Quiz answer feedback: tints one dot's ring green or red for a moment. */
+  private flashState: { id: string; correct: boolean; until: number } | null = null;
 
   private readonly world = new THREE.Vector3();
   private readonly toCamera = new THREE.Vector3();
@@ -167,6 +173,14 @@ export class HotspotLayer {
     this.applyScale();
   }
 
+  flash(id: string, correct: boolean) {
+    this.flashState = { id, correct, until: this.time + FLASH_SECONDS };
+  }
+
+  clearFlash() {
+    this.flashState = null;
+  }
+
   /** Keeps dots at a constant on-screen size regardless of zoom or viewport. */
   setPixelSize(pixels: number, viewportHeight: number, fovDegrees: number) {
     const fov = THREE.MathUtils.degToRad(fovDegrees);
@@ -231,7 +245,18 @@ export class HotspotLayer {
       marker.dot.material.opacity = marker.opacity;
       marker.dot.visible = marker.opacity > 0.01;
 
-      if (marker.emphasis > 0.01) {
+      const flash = this.flashState && this.flashState.id === marker.hotspot.id && this.time < this.flashState.until
+        ? this.flashState
+        : null;
+      if (flash) {
+        const life = (this.flashState!.until - this.time) / FLASH_SECONDS;
+        marker.pulse.visible = true;
+        marker.pulse.material.color.set(flash.correct ? FLASH_CORRECT : FLASH_WRONG);
+        marker.pulse.material.opacity = Math.min(1, life * 1.4) * marker.opacity;
+        marker.pulse.scale.setScalar(this.pixelScale * (1.2 + (1 - life) * 1.6));
+        settled = false;
+      } else if (marker.emphasis > 0.01) {
+        marker.pulse.material.color.set(marker.hotspot.color);
         marker.pulse.visible = true;
         if (beating || marker.hotspot.id === hoveredId) {
           const beat = (this.time * 0.75) % 1;
@@ -243,6 +268,7 @@ export class HotspotLayer {
           marker.pulse.scale.setScalar(this.pixelScale * 1.6);
         }
       } else if (marker.pulse.visible) {
+        marker.pulse.material.color.set(marker.hotspot.color);
         marker.pulse.visible = false;
       }
     }

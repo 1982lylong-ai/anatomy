@@ -49,6 +49,12 @@ export const ui: UiDictionary = {
     seeAll: "查看全部", seeSystem: "查看该系统",
     playAria: "播放{organ}的功能动画", systemAria: "查看{organ}在人体中的位置",
   },
+  quiz: {
+    start: "开始标注测验", find: "找出", progress: "第 {current} / {total} 题",
+    correct: "正确", wrong: "还差一点", reveal: "那是{label}",
+    done: "测验结束", score: "答对 {score} / {total}", retry: "再试一次",
+    exit: "退出测验", hint: "在模型上点击对应的圆点",
+  },
   modal: {
     guided: "引导式探索", close: "关闭", continueExploring: "继续探索",
     quizTitle: "{organ}快速测验", motionTitle: "运动中的{organ}",

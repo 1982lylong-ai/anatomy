@@ -49,6 +49,12 @@ export const ui: UiDictionary = {
     seeAll: "すべて見る", seeSystem: "この系統を見る",
     playAria: "{organ}のはたらきのアニメーションを再生", systemAria: "{organ}が体のどこにあるかを見る",
   },
+  quiz: {
+    start: "ラベルクイズを始める", find: "探してください：", progress: "{total} 問中 {current} 問目",
+    correct: "正解", wrong: "おしい", reveal: "それは{label}です",
+    done: "クイズ終了", score: "{total} 問中 {score} 問正解", retry: "もう一度",
+    exit: "クイズを終える", hint: "モデル上の該当する点をクリック",
+  },
   modal: {
     guided: "ガイド付きの発見", close: "閉じる", continueExploring: "探索を続ける",
     quizTitle: "{organ}のミニクイズ", motionTitle: "動く{organ}",
