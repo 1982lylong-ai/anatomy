@@ -54,7 +54,7 @@ export type UiDictionary = {
   };
   quiz: {
     start: string; find: string; progress: string; correct: string; wrong: string;
-    reveal: string; done: string; score: string; retry: string; exit: string; hint: string;
+    reveal: string; answer: string; done: string; score: string; retry: string; exit: string; hint: string;
   };
   modal: {
     guided: string; close: string; continueExploring: string;

@@ -51,7 +51,7 @@ export const ui: UiDictionary = {
   },
   quiz: {
     start: "Mulai kuis penamaan", find: "Temukan", progress: "{current} dari {total}",
-    correct: "Benar", wrong: "Belum tepat", reveal: "Itu adalah {label}",
+    correct: "Benar", wrong: "Belum tepat", reveal: "Itu adalah {label}", answer: "{label} ditandai dengan warna hijau",
     done: "Kuis selesai", score: "{score} dari {total} benar", retry: "Coba lagi",
     exit: "Keluar dari kuis", hint: "Klik titik yang sesuai pada model",
   },

@@ -51,7 +51,7 @@ export const ui: UiDictionary = {
   },
   quiz: {
     start: "Начать тест на распознавание", find: "Найдите", progress: "{current} из {total}",
-    correct: "Верно", wrong: "Не совсем", reveal: "Это {label}",
+    correct: "Верно", wrong: "Не совсем", reveal: "Это {label}", answer: "{label} отмечен зелёным",
     done: "Тест завершён", score: "{score} из {total} верно", retry: "Пройти снова",
     exit: "Выйти из теста", hint: "Нажмите на соответствующую точку на модели",
   },

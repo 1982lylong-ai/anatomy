@@ -51,7 +51,7 @@ export const ui: UiDictionary = {
   },
   quiz: {
     start: "पहचान प्रश्नोत्तरी शुरू करें", find: "खोजें", progress: "{total} में से {current}",
-    correct: "सही", wrong: "बिलकुल नहीं", reveal: "वह है {label}",
+    correct: "सही", wrong: "बिलकुल नहीं", reveal: "वह है {label}", answer: "{label} हरे रंग में चिह्नित है",
     done: "प्रश्नोत्तरी पूर्ण", score: "{total} में से {score} सही", retry: "फिर से प्रयास करें",
     exit: "प्रश्नोत्तरी छोड़ें", hint: "मॉडल पर संबंधित बिंदु क्लिक करें",
   },

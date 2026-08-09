@@ -46,18 +46,20 @@ type PickRef = { current: (hotspot: Hotspot) => void };
  * organ, so switching specimens restarts it without a resetting effect.
  */
 function LabelQuiz({
-  hotspots, t, pickRef, flash, onExit,
+  hotspots, t, pickRef, flash, screenY, onExit,
 }: {
   hotspots: Hotspot[];
   t: UiDictionary;
   pickRef: PickRef;
   flash: (id: string, correct: boolean) => void;
+  screenY: (id: string) => number | null;
   onExit: () => void;
 }) {
   const [seed, setSeed] = useState(0);
   const [step, setStep] = useState(0);
   const [score, setScore] = useState(0);
-  const [answer, setAnswer] = useState<{ correct: boolean; label: string } | null>(null);
+  const [answer, setAnswer] = useState<{ correct: boolean; picked: string; target: string; atTop: boolean } | null>(null);
+  const [results, setResults] = useState<boolean[]>([]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const order = useMemo(() => shuffle(hotspots), [hotspots, seed]);
   const target = order[step];
@@ -68,15 +70,22 @@ function LabelQuiz({
   // during render is not.
   useEffect(() => {
     pickRef.current = (hotspot) => {
-      if (!target) return;
+      if (!target || answer) return;   // ignore extra clicks while feedback shows
       const correct = hotspot.id === target.id;
       flash(hotspot.id, correct);
-      setAnswer({ correct, label: correct ? target.label : hotspot.label });
+      // A miss also marks where the answer actually was — otherwise the learner
+      // is told they were wrong but never shown the right structure.
+      if (!correct) flash(target.id, true);
+      // Sit the card on the opposite half from the structure being revealed —
+      // otherwise the panel hides the dot it is telling the learner to look at.
+      const revealed = screenY(correct ? hotspot.id : target.id);
+      setAnswer({ correct, picked: hotspot.label, target: target.label, atTop: (revealed ?? 0) > 0.55 });
+      setResults((list) => [...list, correct]);
       if (correct) setScore((value) => value + 1);
       window.setTimeout(() => {
         setAnswer(null);
         setStep((value) => value + 1);
-      }, 1100);
+      }, correct ? 1200 : 2400);   // a miss carries more to read
     };
   });
 
@@ -84,6 +93,7 @@ function LabelQuiz({
     setStep(0);
     setScore(0);
     setAnswer(null);
+    setResults([]);
     setSeed((value) => value + 1);
   };
 
@@ -91,18 +101,40 @@ function LabelQuiz({
     <>
       {target && (
         <div className="quiz-bar" role="status" aria-live="polite">
-          <span className="quiz-progress">{format(t.quiz.progress, { current: String(step + 1), total: String(order.length) })}</span>
-          <strong>{t.quiz.find} <b>{target.label}</b></strong>
-          <small>{t.quiz.hint}</small>
-          <button type="button" onClick={onExit} aria-label={t.quiz.exit}><X size={15} /></button>
+          <div className="quiz-prompt">
+            <em>{t.quiz.find}</em>
+            <strong>{target.label}</strong>
+          </div>
+          <div className="quiz-meta">
+            <span className="quiz-progress">{format(t.quiz.progress, { current: String(step + 1), total: String(order.length) })}</span>
+            <ol className="quiz-pips" aria-hidden>
+              {order.map((hotspot, index) => (
+                <li
+                  key={hotspot.id}
+                  className={index < results.length ? (results[index] ? "ok" : "no") : index === step ? "now" : ""}
+                />
+              ))}
+            </ol>
+            <small>{t.quiz.hint}</small>
+          </div>
+          <button type="button" onClick={onExit} aria-label={t.quiz.exit}><X size={16} /></button>
         </div>
       )}
 
       {answer && (
-        <div className={`quiz-answer ${answer.correct ? "ok" : "no"}`} role="status" aria-live="assertive">
-          {answer.correct
-            ? <><Check size={15} /> {t.quiz.correct}</>
-            : <><X size={15} /> {t.quiz.wrong} · {format(t.quiz.reveal, { label: answer.label })}</>}
+        <div className={`quiz-answer ${answer.correct ? "ok" : "no"} ${answer.atTop ? "at-top" : ""}`} role="status" aria-live="assertive">
+          <span className="quiz-answer-icon">{answer.correct ? <Check size={22} /> : <X size={22} />}</span>
+          <div>
+            <strong>{answer.correct ? t.quiz.correct : t.quiz.wrong}</strong>
+            {answer.correct ? (
+              <span>{answer.target}</span>
+            ) : (
+              <>
+                <span>{format(t.quiz.reveal, { label: answer.picked })}</span>
+                <span className="quiz-answer-hint">{format(t.quiz.answer, { label: answer.target })}</span>
+              </>
+            )}
+          </div>
         </div>
       )}
 
@@ -221,7 +253,9 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
     });
   }, [organ]);
 
-  useEffect(() => viewerRef.current?.setAutoRotate(autoRotate), [autoRotate]);
+  // A spinning specimen makes "click the mitral valve" a game of chance, so the
+  // quiz holds the model still and restores the user's setting on exit.
+  useEffect(() => viewerRef.current?.setAutoRotate(autoRotate && !quizActive), [autoRotate, quizActive]);
   useEffect(() => viewerRef.current?.setQuizMode(quizActive), [quizActive]);
   useEffect(() => viewerRef.current?.setAuthoring(authoring), [authoring]);
 
@@ -311,6 +345,7 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
           t={t}
           pickRef={pickRef}
           flash={(id, correct) => viewerRef.current?.flash(id, correct)}
+          screenY={(id) => viewerRef.current?.hotspotScreenY(id) ?? null}
           onExit={onQuizExit}
         />
       )}
@@ -346,10 +381,12 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
         </div>
       )}
 
+      {!quizActive && (
       <button className="auto-rotate" type="button" onClick={() => onAutoRotate(!autoRotate)} aria-pressed={autoRotate}>
         <RotateCcw size={14} /> {t.viewer.autoRotate}
         <span className={`switch ${autoRotate ? "on" : ""}`}><i /></span>
       </button>
+      )}
 
       <div className="view-caption">
         <span>{t.viewer.caption}</span>

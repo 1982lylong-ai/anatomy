@@ -51,7 +51,7 @@ export const ui: UiDictionary = {
   },
   quiz: {
     start: "ラベルクイズを始める", find: "探してください：", progress: "{total} 問中 {current} 問目",
-    correct: "正解", wrong: "おしい", reveal: "それは{label}です",
+    correct: "正解", wrong: "おしい", reveal: "それは{label}です", answer: "{label}は緑で示されています",
     done: "クイズ終了", score: "{total} 問中 {score} 問正解", retry: "もう一度",
     exit: "クイズを終える", hint: "モデル上の該当する点をクリック",
   },

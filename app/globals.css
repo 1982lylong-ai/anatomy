@@ -672,29 +672,48 @@ button.organ-card-image:focus-visible { outline: 2px solid #8b6fc4; outline-offs
   top: 16px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px 10px 15px;
+  gap: 16px;
+  padding: 13px 14px 13px 20px;
   border: 1px solid var(--line);
-  border-radius: 16px;
-  background: rgba(255,252,247,.93);
+  border-radius: 20px;
+  background: rgba(255,252,247,.94);
   backdrop-filter: blur(14px);
-  box-shadow: 0 10px 26px rgba(75,54,40,.1);
+  box-shadow: 0 12px 30px rgba(75,54,40,.11);
 }
-.quiz-bar .quiz-progress {
-  flex: none;
-  padding: 4px 9px;
-  border-radius: 999px;
-  background: rgba(238,124,106,.1);
-  color: var(--coral);
+.quiz-prompt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.quiz-prompt em {
+  color: var(--muted);
+  font-style: normal;
   font-size: 10px;
-  letter-spacing: .06em;
+  text-transform: uppercase;
+  letter-spacing: .13em;
 }
-.quiz-bar strong { font: 500 14px var(--font-serif), serif; }
-.quiz-bar strong b { color: var(--coral); }
-.quiz-bar small { margin-inline-start: auto; color: var(--muted); font-size: 10px; }
+/* The structure being asked for is the one thing that must be unmissable. */
+.quiz-prompt strong {
+  font: 500 22px/1.15 var(--font-serif), serif;
+  color: var(--coral);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.quiz-meta { margin-inline-start: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.quiz-progress { color: var(--muted); font-size: 10px; letter-spacing: .08em; }
+.quiz-pips { display: flex; gap: 5px; list-style: none; margin: 0; padding: 0; }
+.quiz-pips li {
+  width: 18px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(117,91,70,.16);
+  transition: background .25s ease;
+}
+.quiz-pips li.ok { background: #5c9e6b; }
+.quiz-pips li.no { background: #d1584f; }
+.quiz-pips li.now { background: var(--coral); }
+.quiz-meta small { color: var(--muted); font-size: 10px; }
 .quiz-bar > button {
   flex: none;
-  width: 28px; height: 28px;
+  align-self: flex-start;
+  width: 30px; height: 30px;
   display: grid; place-items: center;
   border: 1px solid var(--line);
   border-radius: 50%;
@@ -702,31 +721,51 @@ button.organ-card-image:focus-visible { outline: 2px solid #8b6fc4; outline-offs
   cursor: pointer;
 }
 
+/* Feedback sits low and wide so it never covers the dot that was just judged —
+   on a miss, the correct structure is flashing green up on the model. */
 .quiz-answer {
   position: absolute;
   z-index: 7;
   left: 50%;
-  top: 74px;
+  bottom: 74px;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  font: 500 12px var(--font-serif), serif;
-  animation: callout-in .22s cubic-bezier(.2,.85,.3,1);
-  box-shadow: 0 8px 20px rgba(75,54,40,.12);
+  gap: 14px;
+  min-width: min(340px, calc(100% - 40px));
+  padding: 14px 22px 14px 16px;
+  border-radius: 18px;
+  box-shadow: 0 16px 38px rgba(75,54,40,.18);
+  animation: quiz-answer-in .26s cubic-bezier(.2,.85,.3,1);
 }
-.quiz-answer.ok { background: #e7f2e8; color: #3f6f4c; }
-.quiz-answer.no { background: #fbe6e4; color: #a8433a; }
+@keyframes quiz-answer-in { from { opacity: 0; transform: translate(-50%, 10px); } }
+/* Flipped above the model when the revealed structure sits low on screen. */
+.quiz-answer.at-top { bottom: auto; top: 118px; }
+.quiz-answer-icon {
+  flex: none;
+  width: 42px; height: 42px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+}
+/* Scoped to the text column. A bare `.quiz-answer span` also matched the icon
+   badge and, being more specific than `.quiz-answer-icon`, replaced its grid
+   centring with `display: block` — which pushed the glyph off centre. */
+.quiz-answer > div strong { display: block; font: 500 19px/1.2 var(--font-serif), serif; }
+.quiz-answer > div span { display: block; font-size: 13px; line-height: 1.4; }
+.quiz-answer .quiz-answer-hint { margin-top: 2px; font-weight: 600; }
+
+.quiz-answer.ok { background: #e6f2e8; color: #2f5c3c; }
+.quiz-answer.ok .quiz-answer-icon { background: #5c9e6b; color: #fff; }
+.quiz-answer.no { background: #fbe7e5; color: #8f382f; }
+.quiz-answer.no .quiz-answer-icon { background: #d1584f; color: #fff; }
 
 .quiz-summary {
   position: absolute;
   z-index: 8;
   left: 50%; top: 50%;
   transform: translate(-50%, -50%);
-  width: min(300px, calc(100% - 40px));
-  padding: 26px 24px 22px;
+  width: min(320px, calc(100% - 40px));
+  padding: 28px 24px 22px;
   text-align: center;
   border: 1px solid var(--line);
   border-radius: 24px;
@@ -734,9 +773,9 @@ button.organ-card-image:focus-visible { outline: 2px solid #8b6fc4; outline-offs
   box-shadow: 0 26px 70px rgba(63,42,28,.22);
   animation: modal-in .32s cubic-bezier(.2,.85,.3,1);
 }
-.quiz-summary h2 { margin: 4px 0 6px; font: 500 26px var(--font-serif), serif; }
-.quiz-summary p { margin: 0; color: #6e655f; font: 500 14px var(--font-serif), serif; }
-.quiz-summary-actions { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; }
+.quiz-summary h2 { margin: 4px 0 6px; font: 500 28px var(--font-serif), serif; }
+.quiz-summary p { margin: 0; color: #6e655f; font: 500 15px var(--font-serif), serif; }
+.quiz-summary-actions { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; }
 .quiz-summary-actions > button:last-child {
   min-height: 34px;
   border: 1px solid var(--line);
@@ -767,7 +806,11 @@ button.organ-card-image:focus-visible { outline: 2px solid #8b6fc4; outline-offs
 .authoring-panel button { flex: none; padding: 4px 9px; border: 1px solid var(--line); border-radius: 7px; background: rgba(255,255,255,.5); cursor: pointer; font-size: 10px; }
 
 @media (max-width: 760px) {
-  .quiz-bar { inset-inline: 10px; top: 10px; flex-wrap: wrap; gap: 8px; }
-  .quiz-bar small { display: none; }
+  .quiz-bar { inset-inline: 10px; top: 10px; gap: 10px; padding: 11px 11px 11px 15px; }
+  .quiz-prompt strong { font-size: 18px; }
+  .quiz-meta small { display: none; }
+  .quiz-answer { bottom: 96px; padding: 12px 16px 12px 13px; gap: 11px; }
+  .quiz-answer-icon { width: 36px; height: 36px; }
+  .quiz-answer > div strong { font-size: 17px; }
   .authoring-panel { inset-inline-start: 10px; max-width: calc(100% - 20px); bottom: 82px; }
 }

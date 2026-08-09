@@ -502,6 +502,13 @@ export class AnatomyViewer {
     });
   }
 
+  /** Where a dot currently sits, as a 0–1 fraction of the viewport height.
+   *  Lets the UI place feedback away from the structure it is pointing at. */
+  hotspotScreenY(id: string): number | null {
+    const point = this.hotspots.screenPosition(id, this.camera, this.width, this.height);
+    return point ? point.y / this.height : null;
+  }
+
   setQuizMode(enabled: boolean) {
     this.quizMode = enabled;
     this.select(null);

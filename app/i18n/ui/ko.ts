@@ -51,7 +51,7 @@ export const ui: UiDictionary = {
   },
   quiz: {
     start: "이름 맞히기 퀴즈 시작", find: "찾아보세요:", progress: "{total}문제 중 {current}번",
-    correct: "정답", wrong: "아쉬워요", reveal: "그것은 {label}입니다",
+    correct: "정답", wrong: "아쉬워요", reveal: "그것은 {label}입니다", answer: "{label}은(는) 초록색으로 표시됩니다",
     done: "퀴즈 완료", score: "{total}문제 중 {score}문제 정답", retry: "다시 풀기",
     exit: "퀴즈 끝내기", hint: "모델에서 해당하는 점을 클릭하세요",
   },

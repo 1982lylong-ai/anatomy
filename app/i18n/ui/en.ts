@@ -50,7 +50,7 @@ export const ui: UiDictionary = {
   },
   quiz: {
     start: "Start the labelling quiz", find: "Find the", progress: "{current} of {total}",
-    correct: "Correct", wrong: "Not quite", reveal: "That is the {label}",
+    correct: "Correct", wrong: "Not quite", reveal: "That is the {label}", answer: "{label} is marked in green",
     done: "Quiz complete", score: "{score} of {total} correct", retry: "Try again",
     exit: "Exit quiz", hint: "Click the matching dot on the model",
   },

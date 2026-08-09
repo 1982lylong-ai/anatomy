@@ -51,7 +51,7 @@ export const ui: UiDictionary = {
   },
   quiz: {
     start: "Empezar el cuestionario", find: "Encuentra", progress: "{current} de {total}",
-    correct: "Correcto", wrong: "Casi", reveal: "Eso es: {label}",
+    correct: "Correcto", wrong: "Casi", reveal: "Eso es: {label}", answer: "{label} está marcado en verde",
     done: "Cuestionario terminado", score: "{score} de {total} aciertos", retry: "Intentar de nuevo",
     exit: "Salir del cuestionario", hint: "Haz clic en el punto correspondiente del modelo",
   },

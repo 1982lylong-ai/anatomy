@@ -51,7 +51,7 @@ export const ui: UiDictionary = {
   },
   quiz: {
     start: "ابدأ اختبار التسمية", find: "حدِّد", progress: "{current} من {total}",
-    correct: "صحيح", wrong: "ليس تمامًا", reveal: "هذا هو {label}",
+    correct: "صحيح", wrong: "ليس تمامًا", reveal: "هذا هو {label}", answer: "{label} معلَّم باللون الأخضر",
     done: "انتهى الاختبار", score: "{score} من {total} صحيحة", retry: "حاول مرة أخرى",
     exit: "إنهاء الاختبار", hint: "انقر على النقطة المقابلة في النموذج",
   },

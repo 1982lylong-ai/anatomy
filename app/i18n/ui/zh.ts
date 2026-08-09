@@ -51,7 +51,7 @@ export const ui: UiDictionary = {
   },
   quiz: {
     start: "开始标注测验", find: "找出", progress: "第 {current} / {total} 题",
-    correct: "正确", wrong: "还差一点", reveal: "那是{label}",
+    correct: "正确", wrong: "还差一点", reveal: "那是{label}", answer: "{label}以绿色标出",
     done: "测验结束", score: "答对 {score} / {total}", retry: "再试一次",
     exit: "退出测验", hint: "在模型上点击对应的圆点",
   },

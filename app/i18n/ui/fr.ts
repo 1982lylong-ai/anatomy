@@ -51,7 +51,7 @@ export const ui: UiDictionary = {
   },
   quiz: {
     start: "Commencer le quiz d'identification", find: "Trouvez", progress: "{current} sur {total}",
-    correct: "Correct", wrong: "Pas tout à fait", reveal: "C'est : {label}",
+    correct: "Correct", wrong: "Pas tout à fait", reveal: "C'est : {label}", answer: "{label} est indiqué en vert",
     done: "Quiz terminé", score: "{score} bonnes réponses sur {total}", retry: "Réessayer",
     exit: "Quitter le quiz", hint: "Cliquez sur le point correspondant du modèle",
   },
