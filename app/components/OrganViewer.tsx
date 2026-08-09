@@ -12,22 +12,25 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import type { Hotspot, Organ } from "../lib/anatomy-data";
+import type { Hotspot, Organ } from "../i18n/merge";
+import { format, type UiDictionary } from "../i18n/types";
 import type { AnatomyViewer } from "../lib/three/viewer";
 
 type Props = {
   organ: Organ;
+  t: UiDictionary;
   autoRotate: boolean;
   onAutoRotate: (enabled: boolean) => void;
   compare: boolean;
   onCompare: () => void;
 };
 
-export function OrganViewer({ organ, autoRotate, onAutoRotate, compare, onCompare }: Props) {
+export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCompare }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<AnatomyViewer | null>(null);
   const organRef = useRef(organ);
   const autoRotateRef = useRef(autoRotate);
+  const canvasLabelRef = useRef(t.viewer.canvas);
   const [selected, setSelected] = useState<Hotspot | null>(null);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -52,6 +55,11 @@ export function OrganViewer({ organ, autoRotate, onAutoRotate, compare, onCompar
   }, [autoRotate]);
 
   useEffect(() => {
+    canvasLabelRef.current = t.viewer.canvas;
+    viewerRef.current?.setCanvasLabel(t.viewer.canvas);
+  }, [t.viewer.canvas]);
+
+  useEffect(() => {
     let cancelled = false;
     let viewer: AnatomyViewer | null = null;
 
@@ -66,6 +74,7 @@ export function OrganViewer({ organ, autoRotate, onAutoRotate, compare, onCompar
         },
       });
       viewerRef.current = viewer;
+      viewer.setCanvasLabel(canvasLabelRef.current);
       viewer.setAutoRotate(autoRotateRef.current);
       const current = organRef.current;
       viewer.setOrgan(current.model, current.hotspots, current.accent).catch(() => {
@@ -112,21 +121,21 @@ export function OrganViewer({ organ, autoRotate, onAutoRotate, compare, onCompar
   };
 
   const tools = [
-    { id: "rotate", label: "Rotate", icon: RotateCcw },
-    { id: "zoom", label: "Zoom", icon: Search },
-    { id: "isolate", label: "Isolate", icon: CircleDashed },
-    { id: "section", label: "Cross-section", icon: ScanLine },
-    { id: "layers", label: "Layers", icon: Layers3 },
-    { id: "compare", label: "Compare", icon: Box },
-    { id: "reset", label: "Reset", icon: RotateCcw },
+    { id: "rotate", label: t.tools.rotate, icon: RotateCcw },
+    { id: "zoom", label: t.tools.zoom, icon: Search },
+    { id: "isolate", label: t.tools.isolate, icon: CircleDashed },
+    { id: "section", label: t.tools.section, icon: ScanLine },
+    { id: "layers", label: t.tools.layers, icon: Layers3 },
+    { id: "compare", label: t.tools.compare, icon: Box },
+    { id: "reset", label: t.tools.reset, icon: RotateCcw },
   ];
 
   return (
-    <section className="viewer-shell" aria-label={`${organ.name} interactive viewer`}>
+    <section className="viewer-shell" aria-label={format(t.viewer.title, { organ: organ.name })}>
       <div className="viewer-glow" style={{ "--organ-accent": organ.accent } as React.CSSProperties} />
       <div ref={mountRef} className="three-mount" />
 
-      <div className="viewer-tools" aria-label="3D viewer tools">
+      <div className="viewer-tools" aria-label={t.tools.label}>
         {tools.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -142,15 +151,15 @@ export function OrganViewer({ organ, autoRotate, onAutoRotate, compare, onCompar
         ))}
       </div>
 
-      <aside className="tip-note" aria-label="Viewer instructions">
-        <span><Sparkles size={15} /> Tip</span>
-        <p>Drag to rotate<br />Scroll to zoom<br />Click a dot to learn more</p>
+      <aside className="tip-note" aria-label={t.viewer.tip}>
+        <span><Sparkles size={15} /> {t.viewer.tip}</span>
+        <p>{t.viewer.tipDrag}<br />{t.viewer.tipScroll}<br />{t.viewer.tipClick}</p>
       </aside>
 
       {selected && (
         <div className="hotspot-callout" ref={calloutRef} data-side="right">
           <div className="callout-body" style={{ "--hotspot-color": selected.color } as React.CSSProperties}>
-            <button className="callout-close" type="button" onClick={() => viewerRef.current?.clearSelection()} aria-label="Close">
+            <button className="callout-close" type="button" onClick={() => viewerRef.current?.clearSelection()} aria-label={t.modal.close}>
               <X size={13} />
             </button>
             <b>{selected.label}</b>
@@ -160,7 +169,7 @@ export function OrganViewer({ organ, autoRotate, onAutoRotate, compare, onCompar
       )}
 
       {/* Screen-reader equivalent of the dots, which live in the canvas. */}
-      <ul className="hotspot-index">
+      <ul className="hotspot-index" aria-label={t.viewer.structures}>
         {organ.hotspots.map((hotspot) => (
           <li key={hotspot.id}>{hotspot.label}: {hotspot.detail}</li>
         ))}
@@ -169,18 +178,18 @@ export function OrganViewer({ organ, autoRotate, onAutoRotate, compare, onCompar
       {loading && slowLoad && (
         <div className="model-loader" role="status" aria-live="polite">
           <div className="loader-orbit"><Maximize2 size={20} /></div>
-          <strong>Preparing the {organ.name.toLowerCase()}</strong>
+          <strong>{format(t.viewer.loading, { organ: organ.name })}</strong>
           <span>{Math.max(8, Math.round(progress * 100))}%</span>
         </div>
       )}
 
       <button className="auto-rotate" type="button" onClick={() => onAutoRotate(!autoRotate)} aria-pressed={autoRotate}>
-        <RotateCcw size={14} /> Auto rotate
+        <RotateCcw size={14} /> {t.viewer.autoRotate}
         <span className={`switch ${autoRotate ? "on" : ""}`}><i /></span>
       </button>
 
       <div className="view-caption">
-        <span>3D specimen · click a dot to explore</span>
+        <span>{t.viewer.caption}</span>
         <strong>{organ.scientificName}</strong>
       </div>
     </section>

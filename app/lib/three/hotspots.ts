@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { Hotspot } from "../anatomy-data";
+import type { Hotspot } from "../../i18n/merge";
 
 export type Marker = {
   hotspot: Hotspot;

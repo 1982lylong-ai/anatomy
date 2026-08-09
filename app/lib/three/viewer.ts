@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import gsap from "gsap";
-import type { Hotspot } from "../anatomy-data";
+import type { Hotspot } from "../../i18n/merge";
 import { AnatomyAssetManager, type LoadedOrgan } from "./loaders";
 import { HotspotLayer } from "./hotspots";
 
@@ -94,10 +94,8 @@ export class AnatomyViewer {
     // shadow gives the same read for free.
     this.renderer.shadowMap.enabled = false;
     this.renderer.localClippingEnabled = true;
-    this.renderer.domElement.setAttribute(
-      "aria-label",
-      "Interactive 3D anatomy model. Drag to rotate, scroll to zoom, and click a dot to read about that structure.",
-    );
+    // Localised by the React layer via setCanvasLabel once the dictionary is known.
+    this.renderer.domElement.setAttribute("aria-label", "Interactive 3D anatomy model");
     this.renderer.domElement.tabIndex = 0;
     container.appendChild(this.renderer.domElement);
 
@@ -526,6 +524,10 @@ export class AnatomyViewer {
   };
 
   // ---------------------------------------------------------------- tools
+
+  setCanvasLabel(label: string) {
+    this.renderer.domElement.setAttribute("aria-label", label);
+  }
 
   setAutoRotate(enabled: boolean) {
     this.autoRotateWanted = enabled;
