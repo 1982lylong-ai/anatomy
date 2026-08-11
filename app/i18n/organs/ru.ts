@@ -24,6 +24,12 @@ export const organs: OrganContentDictionary = {
       "left-ventricle": { label: "Левый желудочек", detail: "Нагнетает кровь в тело" },
       "right-ventricle": { label: "Правый желудочек", detail: "Нагнетает кровь в лёгкие" },
       mitral: { label: "Митральный клапан", detail: "Препятствует обратному току" },
+      "sa-node": { label: "Nodus sinuatrialis", detail: "Natural pacemaker — schematic" },
+      "av-node": { label: "Nodus atrioventricularis", detail: "Electrical gateway with delay — schematic" },
+      "his-bundle": { label: "Fasciculus atrioventricularis", detail: "Electrical path into ventricles — schematic" },
+      "right-bundle": { label: "Crus dextrum", detail: "Signal to right ventricle — schematic" },
+      "left-bundle": { label: "Crus sinistrum", detail: "Signal to left ventricle — schematic" },
+      "purkinje": { label: "Rami subendocardiales", detail: "Synchronised ventricular contraction — schematic" },
     },
   },
   brain: {

@@ -24,6 +24,12 @@ export const organs: OrganContentDictionary = {
       "left-ventricle": { label: "Left Ventricle", detail: "Pumps to the body" },
       "right-ventricle": { label: "Right Ventricle", detail: "Pumps to the lungs" },
       "mitral": { label: "Mitral Valve", detail: "Prevents backflow" },
+      "sa-node": { label: "Sinoatrial Node", detail: "The heart's natural pacemaker (schematic position)" },
+      "av-node": { label: "Atrioventricular Node", detail: "Electrical gateway with a built-in delay (schematic position)" },
+      "his-bundle": { label: "Bundle of His", detail: "The only electrical path into the ventricles (schematic position)" },
+      "right-bundle": { label: "Right Bundle Branch", detail: "Carries the signal to the right ventricle (schematic position)" },
+      "left-bundle": { label: "Left Bundle Branch", detail: "Carries the signal to the left ventricle (schematic position)" },
+      "purkinje": { label: "Purkinje Fibres", detail: "Make the ventricular muscle contract together (schematic position)" },
     },
   },
   brain: {

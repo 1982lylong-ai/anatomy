@@ -49,6 +49,14 @@ export const organStructures: OrganStructure[] = [
       { id: "left-ventricle", ta: "Ventriculus sinister", position: [0.7, -0.75, 0.65], color: "#f2a33b" },
       { id: "right-ventricle", ta: "Ventriculus dexter", position: [-0.65, -0.68, 0.66], color: "#ee7c6a" },
       { id: "mitral", ta: "Valva atrioventricularis sinistra", position: [0.18, -1.35, 0.48], color: "#d89bc4" },
+      // Conduction system — surface projections of internal structures
+      // (authoring-sampled; schematic positions, see i18n "schematic" notes).
+      { id: "sa-node", ta: "Nodus sinuatrialis", position: [-0.12, 0.65, -0.55], color: "#e55d5d" },
+      { id: "av-node", ta: "Nodus atrioventricularis", position: [1.02, -0.73, -0.36], color: "#d98e4a" },
+      { id: "his-bundle", ta: "Fasciculus atrioventricularis", position: [0.86, 0.52, -0.11], color: "#c9a84a" },
+      { id: "right-bundle", ta: "Crus dextrum", position: [-1.11, 0.04, 0], color: "#7fb069" },
+      { id: "left-bundle", ta: "Crus sinistrum", position: [0.43, 0.14, 0.86], color: "#4a9db8" },
+      { id: "purkinje", ta: "Rami subendocardiales", position: [0.52, -1.63, 0.51], color: "#9b7bc9" },
     ],
   },
   {

@@ -24,6 +24,12 @@ export const organs: OrganContentDictionary = {
       "left-ventricle": { label: "左心室", detail: "向全身泵血" },
       "right-ventricle": { label: "右心室", detail: "向肺泵血" },
       mitral: { label: "二尖瓣", detail: "防止血液回流" },
+      "sa-node": { label: "窦房结", detail: "心脏的天然起搏点（右心房上部，示意位置）" },
+      "av-node": { label: "房室结", detail: "电信号的「中转站」，延迟后传入心室（示意位置）" },
+      "his-bundle": { label: "希氏束", detail: "电信号进入心室的唯一通道（示意位置）" },
+      "right-bundle": { label: "右束支", detail: "将电信号传向右心室（示意位置）" },
+      "left-bundle": { label: "左束支", detail: "将电信号传向左心室（示意位置）" },
+      purkinje: { label: "浦肯野纤维", detail: "让心室肌同步收缩（示意位置）" },
     },
   },
   brain: {

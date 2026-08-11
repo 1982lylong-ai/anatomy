@@ -24,6 +24,12 @@ export const organs: OrganContentDictionary = {
       "left-ventricle": { label: "좌심실", detail: "온몸으로 내보냄" },
       "right-ventricle": { label: "우심실", detail: "폐로 내보냄" },
       mitral: { label: "승모판", detail: "역류를 막음" },
+      "sa-node": { label: "Nodus sinuatrialis", detail: "Natural pacemaker — schematic" },
+      "av-node": { label: "Nodus atrioventricularis", detail: "Electrical gateway with delay — schematic" },
+      "his-bundle": { label: "Fasciculus atrioventricularis", detail: "Electrical path into ventricles — schematic" },
+      "right-bundle": { label: "Crus dextrum", detail: "Signal to right ventricle — schematic" },
+      "left-bundle": { label: "Crus sinistrum", detail: "Signal to left ventricle — schematic" },
+      "purkinje": { label: "Rami subendocardiales", detail: "Synchronised ventricular contraction — schematic" },
     },
   },
   brain: {

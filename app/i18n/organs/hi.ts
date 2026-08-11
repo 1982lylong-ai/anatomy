@@ -27,6 +27,12 @@ export const organs: OrganContentDictionary = {
       "left-ventricle": { label: "बायाँ निलय", detail: "शरीर की ओर पंप करता है" },
       "right-ventricle": { label: "दायाँ निलय", detail: "फेफड़ों की ओर पंप करता है" },
       mitral: { label: "मित्राल कपाट", detail: "रक्त को पीछे बहने से रोकता है" },
+      "sa-node": { label: "Nodus sinuatrialis", detail: "Natural pacemaker — schematic" },
+      "av-node": { label: "Nodus atrioventricularis", detail: "Electrical gateway with delay — schematic" },
+      "his-bundle": { label: "Fasciculus atrioventricularis", detail: "Electrical path into ventricles — schematic" },
+      "right-bundle": { label: "Crus dextrum", detail: "Signal to right ventricle — schematic" },
+      "left-bundle": { label: "Crus sinistrum", detail: "Signal to left ventricle — schematic" },
+      "purkinje": { label: "Rami subendocardiales", detail: "Synchronised ventricular contraction — schematic" },
     },
   },
   brain: {
