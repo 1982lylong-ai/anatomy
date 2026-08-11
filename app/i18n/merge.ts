@@ -4,7 +4,25 @@ import type { OrganContent, OrganContentDictionary } from "./types";
 /** Structure joined with the active locale's prose. Components consume this
  *  shape, so they never need to know a translation layer exists. */
 export type Hotspot = HotspotStructure & { label: string; detail: string };
-export type Organ = Omit<OrganStructure, "hotspots"> & Omit<OrganContent, "hotspots"> & { hotspots: Hotspot[] };
+export type Organ = Omit<OrganStructure, "hotspots" | "pathologyHotspots"> &
+  Omit<OrganContent, "hotspots" | "pathologyHotspots"> & {
+    hotspots: Hotspot[];
+    pathologyHotspots?: Hotspot[];
+  };
+
+function localiseHotspots(
+  structures: HotspotStructure[] | undefined,
+  prose: Record<string, { label: string; detail: string }> | undefined,
+): Hotspot[] | undefined {
+  if (!structures) return undefined;
+  return structures.map((hotspot) => ({
+    ...hotspot,
+    // Fall back to the Latin term if a locale has not translated this
+    // structure yet — never render an empty label.
+    label: prose?.[hotspot.id]?.label ?? hotspot.ta,
+    detail: prose?.[hotspot.id]?.detail ?? "",
+  }));
+}
 
 export function buildOrgans(content: OrganContentDictionary): Organ[] {
   return organStructures.map((structure) => {
@@ -12,13 +30,8 @@ export function buildOrgans(content: OrganContentDictionary): Organ[] {
     return {
       ...structure,
       ...prose,
-      hotspots: structure.hotspots.map((hotspot) => ({
-        ...hotspot,
-        // Fall back to the Latin term if a locale has not translated this
-        // structure yet — never render an empty label.
-        label: prose.hotspots[hotspot.id]?.label ?? hotspot.ta,
-        detail: prose.hotspots[hotspot.id]?.detail ?? "",
-      })),
+      hotspots: localiseHotspots(structure.hotspots, prose.hotspots) ?? [],
+      pathologyHotspots: localiseHotspots(structure.pathologyHotspots, prose.pathologyHotspots),
     };
   });
 }

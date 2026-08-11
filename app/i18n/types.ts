@@ -36,6 +36,8 @@ export type OrganContent = {
   quiz?: QuizQuestion[];
   /** Keyed by hotspot id — the Terminologia Anatomica term is the anchor. */
   hotspots: Record<string, { label: string; detail: string }>;
+  /** Optional labels for disease dots (pathology mode); falls back to TA term. */
+  pathologyHotspots?: Record<string, { label: string; detail: string }>;
   /** Disease primers shown from the clinical-notes card (optional per locale). */
   pathology?: PathologySection[];
   /** Disclaimer line under the pathology list (optional per locale). */

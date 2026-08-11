@@ -129,6 +129,7 @@ export function AnatomyApp({ locale, dictionary }: { locale: LocaleConfig; dicti
   const [query, setQuery] = useState("");
   const [mobileLibrary, setMobileLibrary] = useState(false);
   const [quizActive, setQuizActive] = useState(false);
+  const [pathologyMode, setPathologyMode] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const prefetched = useRef(new Set<OrganId>());
   const organ = organById[organId];
@@ -167,6 +168,7 @@ export function AnatomyApp({ locale, dictionary }: { locale: LocaleConfig; dicti
     setMobileLibrary(false);
     setCompare(false);
     setQuizActive(false);
+    setPathologyMode(false);
   };
 
   // Warms the model in the HTTP cache while the pointer is still travelling,
@@ -244,6 +246,7 @@ export function AnatomyApp({ locale, dictionary }: { locale: LocaleConfig; dicti
           quizActive={quizActive}
           onQuizExit={() => setQuizActive(false)}
           conductionSignal={conductionTick}
+          pathologyMode={pathologyMode}
         />
 
         <aside className="info-panel" ref={contentRef}>
@@ -335,7 +338,7 @@ export function AnatomyApp({ locale, dictionary }: { locale: LocaleConfig; dicti
         </article>
       </section>
 
-      {modal && <LearningModal type={modal} organ={organ} t={t} onClose={() => setModal(null)} />}
+      {modal && <LearningModal type={modal} organ={organ} t={t} onClose={() => setModal(null)} onExplore3D={() => { setModal(null); setPathologyMode(true); }} />}
       {mobileLibrary && <button className="drawer-backdrop" aria-label={t.library.close} onClick={() => setMobileLibrary(false)} />}
     </main>
   );
@@ -400,11 +403,13 @@ function LearningModal({
   organ,
   t,
   onClose,
+  onExplore3D,
 }: {
   type: Exclude<Modal, null>;
   organ: Organ;
   t: UiDictionary;
   onClose: () => void;
+  onExplore3D?: () => void;
 }) {
   const vars = { organ: organ.name, location: organ.location };
   const [showQuiz, setShowQuiz] = useState(false);
@@ -472,6 +477,9 @@ function LearningModal({
               </article>
             ))}
             {organ.pathologyNote ? <p className="pathology-disclaimer">{organ.pathologyNote}</p> : null}
+            {onExplore3D ? (
+              <button className="lesson-button" onClick={onExplore3D}>{t.viewer.tipClick} <ArrowRight size={16} /></button>
+            ) : null}
             <button className="lesson-button" onClick={onClose}>{t.modal.continueExploring} <ArrowRight size={16} /></button>
           </div>
         ) : (

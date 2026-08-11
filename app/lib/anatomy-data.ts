@@ -32,6 +32,8 @@ export type OrganStructure = {
   /** Latin binomial — intentionally identical in every locale. */
   scientificName: string;
   hotspots: HotspotStructure[];
+  /** Optional disease-oriented dots shown in pathology mode (heart only). */
+  pathologyHotspots?: HotspotStructure[];
 };
 
 export const organStructures: OrganStructure[] = [
@@ -57,6 +59,14 @@ export const organStructures: OrganStructure[] = [
       { id: "right-bundle", ta: "Crus dextrum", position: [-1.11, 0.04, 0], color: "#7fb069" },
       { id: "left-bundle", ta: "Crus sinistrum", position: [0.43, 0.14, 0.86], color: "#4a9db8" },
       { id: "purkinje", ta: "Rami subendocardiales", position: [0.52, -1.63, 0.51], color: "#9b7bc9" },
+    ],
+    // Disease dots — surface projections of coronary anatomy and valves.
+    // Schematic positions (authoring-sampled where possible); see i18n notes.
+    pathologyHotspots: [
+      { id: "lad", ta: "Arteria interventricularis anterior", position: [-0.28, 0.42, 0.95], color: "#d64545" },
+      { id: "rca", ta: "Arteria coronaria dextra", position: [-1.08, 0.18, 0.25], color: "#d64545" },
+      { id: "lcx", ta: "Arteria circumflexa", position: [0.92, 0.3, -0.62], color: "#d64545" },
+      { id: "aortic-valve", ta: "Valva aortae", position: [0.02, 1.3, 0.6], color: "#d89bc4" },
     ],
   },
   {

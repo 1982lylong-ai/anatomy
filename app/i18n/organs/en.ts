@@ -75,6 +75,12 @@ export const organs: OrganContentDictionary = {
       "left-bundle": { label: "Left Bundle Branch", detail: "Carries the signal to the left ventricle (schematic position)" },
       "purkinje": { label: "Purkinje Fibres", detail: "Make the ventricular muscle contract together (schematic position)" },
     },
+    pathologyHotspots: {
+      "lad": { label: "Left Anterior Descending (LAD)", detail: "The most important coronary branch, running in the anterior interventricular groove; occlusion often causes anterior wall infarction" },
+      "rca": { label: "Right Coronary Artery (RCA)", detail: "Supplies the right ventricle and sinoatrial node; occlusion can cause inferior infarction or arrhythmia" },
+      "lcx": { label: "Left Circumflex (LCX)", detail: "Runs in the atrioventricular groove, supplying the lateral and posterior wall (schematic position)" },
+      "aortic-valve": { label: "Aortic Valve", detail: "The valve between the left ventricle and the aorta; stenosis or regurgitation is common in older adults" },
+    },
   },
   brain: {
     name: "Brain",

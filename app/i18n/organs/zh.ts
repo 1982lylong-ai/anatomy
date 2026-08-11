@@ -75,6 +75,12 @@ export const organs: OrganContentDictionary = {
       "left-bundle": { label: "左束支", detail: "将电信号传向左心室（示意位置）" },
       purkinje: { label: "浦肯野纤维", detail: "让心室肌同步收缩（示意位置）" },
     },
+    pathologyHotspots: {
+      lad: { label: "左前降支（LAD）", detail: "前室间沟走行的最重要冠状动脉分支，堵塞易致前壁心肌梗死" },
+      rca: { label: "右冠状动脉（RCA）", detail: "供应右心室与窦房结，堵塞可致下壁心梗或心律失常" },
+      lcx: { label: "左旋支（LCX）", detail: "沿房室沟走行，供应左心室侧后壁（示意位置）" },
+      "aortic-valve": { label: "主动脉瓣", detail: "左心室与主动脉之间的瓣膜，狭窄或关闭不全常见于老年人" },
+    },
   },
   brain: {
     name: "大脑",

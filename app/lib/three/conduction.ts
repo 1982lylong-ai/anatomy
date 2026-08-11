@@ -22,14 +22,30 @@ const LEFT_PATH: [number, number, number][] = [SA, AV, HIS, LEFT_BUNDLE, APEX];
 const TRAIL_COUNT = 8;
 const TRAIL_SPACING = 0.045; // fraction of path per trail element
 
+/** Node position -> hotspot id, so the pulse can light the matching dot as it
+ *  passes each station of the conduction system (fires once per cycle). */
+const NODE_HOTSPOTS: [number, number, number, string][] = [
+  [...SA, "sa-node"],
+  [...AV, "av-node"],
+  [...HIS, "his-bundle"],
+  [...RIGHT_BUNDLE, "right-bundle"],
+  [...LEFT_BUNDLE, "left-bundle"],
+  [...APEX, "purkinje"],
+];
+
+const NODE_TRIGGER_DISTANCE = 0.35;
+
 class Pulse {
   readonly group = new THREE.Group();
   private curve: THREE.CatmullRomCurve3;
   private leader: THREE.Mesh;
   private trail: THREE.Mesh[] = [];
   private progress = 0;
+  private triggered = new Set<string>();
+  private onNode?: (hotspotId: string) => void;
 
-  constructor(path: [number, number, number][], color: number) {
+  constructor(path: [number, number, number][], color: number, onNode?: (hotspotId: string) => void) {
+    this.onNode = onNode;
     this.curve = new THREE.CatmullRomCurve3(
       path.map(([x, y, z]) => new THREE.Vector3(x, y, z)),
       false,
@@ -57,6 +73,7 @@ class Pulse {
 
   reset() {
     this.progress = 0;
+    this.triggered.clear();
   }
 
   /** t in [0, 1); advances position and trail. */
@@ -66,6 +83,19 @@ class Pulse {
     for (let i = 0; i < this.trail.length; i++) {
       const tt = (t - (i + 1) * TRAIL_SPACING + 1) % 1;
       this.trail[i].position.copy(this.curve.getPoint(tt));
+    }
+    // Fire the dot flash once per station per cycle as the leader passes.
+    if (this.onNode) {
+      for (const [x, y, z, id] of NODE_HOTSPOTS) {
+        if (this.triggered.has(id)) continue;
+        const dx = this.leader.position.x - x;
+        const dy = this.leader.position.y - y;
+        const dz = this.leader.position.z - z;
+        if (dx * dx + dy * dy + dz * dz < NODE_TRIGGER_DISTANCE * NODE_TRIGGER_DISTANCE) {
+          this.triggered.add(id);
+          this.onNode(id);
+        }
+      }
     }
   }
 
@@ -87,7 +117,7 @@ export class ConductionAnimation {
   private progress = 0;
   private cycleSeconds = 4.2;
 
-  constructor() {
+  constructor(onNodePassed?: (hotspotId: string) => void) {
     // Translucent pathways for both branches so the route is legible.
     this.pathLine = new THREE.Line(
       new THREE.BufferGeometry().setFromPoints(
@@ -108,8 +138,8 @@ export class ConductionAnimation {
 
     // Right bundle: warm gold. Left bundle: cool cyan — mirrors the hotspot
     // palette (right #7fb069 green / left #4a9db8 blue) for consistency.
-    this.rightPulse = new Pulse(RIGHT_PATH, 0xffd76a);
-    this.leftPulse = new Pulse(LEFT_PATH, 0x9fe0ff);
+    this.rightPulse = new Pulse(RIGHT_PATH, 0xffd76a, onNodePassed);
+    this.leftPulse = new Pulse(LEFT_PATH, 0x9fe0ff, onNodePassed);
     this.group.add(this.rightPulse.group, this.leftPulse.group);
 
     this.group.visible = false;

@@ -76,6 +76,8 @@ export class AnatomyViewer {
   private authorRaycaster = new THREE.Raycaster();
   private liteCache = new Map<string, THREE.LineSegments>();
   private layersOn = false;
+  private pathologyMode = false;
+  private anatomyHotspots: Hotspot[] = [];
   private conduction: ConductionAnimation | null = null;
 
   constructor(container: HTMLElement, callbacks: ViewerCallbacks) {
@@ -289,6 +291,7 @@ export class AnatomyViewer {
     this.organ = organ;
     organ.pivot.scale.setScalar(1);
     organ.pivot.position.set(0, 0, 0);
+    this.anatomyHotspots = hotspots;
     this.scene.add(organ.pivot);
     organ.pivot.updateWorldMatrix(true, true);
 
@@ -521,6 +524,19 @@ export class AnatomyViewer {
     this.dirty = true;
   }
 
+  /** Swaps the dot layer between anatomy dots and disease dots (heart only).
+   *  Hotspot data lives in React-land (per-locale), so it is passed in. */
+  setPathologyMode(enabled: boolean, pathologyHotspots?: Hotspot[]) {
+    if (this.pathologyMode === enabled) return;
+    this.pathologyMode = enabled;
+    if (!this.organ) return;
+    this.select(null);
+    const group = enabled ? (pathologyHotspots ?? []) : this.anatomyHotspots;
+    this.hotspots.attach(this.organ.pivot, group, this.organ.meshes);
+    this.hotspots.setPixelSize(DOT_PIXELS, this.height, CAMERA_FOV);
+    this.dirty = true;
+  }
+
   setAuthoring(enabled: boolean) {
     this.authoring = enabled;
     this.renderer.domElement.style.cursor = enabled ? "crosshair" : "";
@@ -614,7 +630,9 @@ export class AnatomyViewer {
   playConduction() {
     if (!this.organ || this.conduction?.group.visible) return;
     if (!this.conduction) {
-      this.conduction = new ConductionAnimation();
+      // Light the matching hotspot dot (green ring) as the pulse passes each
+      // station — the animation and the clickable dots stay in sync.
+      this.conduction = new ConductionAnimation((hotspotId) => this.hotspots.flash(hotspotId, true));
       this.conduction.group.visible = false;
       this.organ.pivot.add(this.conduction.group);
     }

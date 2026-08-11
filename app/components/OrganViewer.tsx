@@ -29,6 +29,7 @@ type Props = {
   onQuizExit: () => void;
   /** Increment to fire the cardiac conduction pulse on the heart specimen. */
   conductionSignal: number;
+  pathologyMode: boolean;
 };
 
 /** Fisher–Yates. The quiz asks for every structure once, in a fresh order. */
@@ -164,7 +165,7 @@ function useAuthoringFlag() {
   );
 }
 
-export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCompare, quizActive, onQuizExit, conductionSignal }: Props) {
+export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCompare, quizActive, onQuizExit, conductionSignal, pathologyMode }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<AnatomyViewer | null>(null);
   const organRef = useRef(organ);
@@ -270,6 +271,7 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
   // quiz holds the model still and restores the user's setting on exit.
   useEffect(() => viewerRef.current?.setAutoRotate(autoRotate && !quizActive), [autoRotate, quizActive]);
   useEffect(() => viewerRef.current?.setQuizMode(quizActive), [quizActive]);
+  useEffect(() => viewerRef.current?.setPathologyMode(pathologyMode, organ.pathologyHotspots), [pathologyMode, organ]);
   useEffect(() => viewerRef.current?.setAuthoring(authoring), [authoring]);
 
 
@@ -348,7 +350,7 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
 
       {/* Screen-reader equivalent of the dots, which live in the canvas. */}
       <ul className="hotspot-index" aria-label={t.viewer.structures}>
-        {organ.hotspots.map((hotspot) => (
+        {(pathologyMode && organ.pathologyHotspots?.length ? organ.pathologyHotspots : organ.hotspots).map((hotspot) => (
           <li key={hotspot.id}>{hotspot.label}: {hotspot.detail}</li>
         ))}
       </ul>
