@@ -125,6 +125,7 @@ export function AnatomyApp({ locale, dictionary }: { locale: LocaleConfig; dicti
   const [autoRotate, setAutoRotate] = useState(true);
   const [compare, setCompare] = useState(false);
   const [modal, setModal] = useState<Modal>(null);
+  const [conductionTick, setConductionTick] = useState(0);
   const [query, setQuery] = useState("");
   const [mobileLibrary, setMobileLibrary] = useState(false);
   const [quizActive, setQuizActive] = useState(false);
@@ -147,6 +148,13 @@ export function AnatomyApp({ locale, dictionary }: { locale: LocaleConfig; dicti
       { opacity: 1, y: 0, duration: 0.48, stagger: 0.035, ease: "power2.out", overwrite: true },
     );
   }, [organId]);
+
+  // On the heart specimen the Animate button fires the 3D conduction pulse;
+  // on every other specimen it opens the generic animation modal.
+  const handleAnimate = () => {
+    if (organId === "heart") setConductionTick((tick) => tick + 1);
+    else setModal("animation");
+  };
 
   const selectOrgan = (id: OrganId) => {
     if (organById[id].illustrated) {
@@ -235,6 +243,7 @@ export function AnatomyApp({ locale, dictionary }: { locale: LocaleConfig; dicti
           onCompare={() => setCompare(!compare)}
           quizActive={quizActive}
           onQuizExit={() => setQuizActive(false)}
+          conductionSignal={conductionTick}
         />
 
         <aside className="info-panel" ref={contentRef}>
@@ -260,7 +269,7 @@ export function AnatomyApp({ locale, dictionary }: { locale: LocaleConfig; dicti
           <div className="fun-note" data-reveal><Sparkles size={15} /><p><b>{t.info.didYouKnow}</b>{organ.funFact}</p></div>
           <button className="lesson-button" data-reveal onClick={() => setModal("lesson")}>{t.info.viewLesson} <ArrowRight size={16} /></button>
           <div className="action-grid" data-reveal>
-            <button onClick={() => setModal("animation")}><Play size={15} /> {t.info.animate}</button>
+            <button onClick={handleAnimate}><Play size={15} /> {t.info.animate}</button>
             <button onClick={() => { setQuizActive(true); setModal(null); }}><CircleHelp size={15} /> {t.info.quiz}</button>
             <button onClick={() => setCompare(!compare)} className={compare ? "active" : ""}><Share2 size={15} /> {t.info.compare}</button>
           </div>
@@ -298,14 +307,14 @@ export function AnatomyApp({ locale, dictionary }: { locale: LocaleConfig; dicti
           <button
             type="button"
             className="function-visual organ-card-image"
-            onClick={() => setModal("animation")}
+            onClick={handleAnimate}
             aria-label={format(t.cards.playAria, { organ: organ.name })}
           >
             <OrganArt organ={organ} asset="organ" alt="" />
             <i className="function-pulse" />
             <span className="play-badge"><Play size={18} fill="currentColor" /></span>
           </button>
-          <button onClick={() => setModal("animation")}>{t.cards.playAnimation} <ArrowRight size={14} /></button>
+          <button onClick={handleAnimate}>{t.cards.playAnimation} <ArrowRight size={14} /></button>
         </article>
         <article>
           <header><div><em>{t.cards.clinicalNotes}</em><h3>{t.cards.commonConditions}</h3></div><FileText size={17} /></header>
@@ -396,7 +405,7 @@ function LearningModal({
           </>
         ) : (
           <>
-            <p>{t.modal.lessonBody}</p>
+            <p>{organ.lessonBody ?? t.modal.lessonBody}</p>
             <div className={`modal-demo ${type === "animation" ? "moving" : ""}`}><OrganArt organ={organ} asset="organ" alt="" /></div>
             <button className="lesson-button" onClick={onClose}>{t.modal.continueExploring} <ArrowRight size={16} /></button>
           </>

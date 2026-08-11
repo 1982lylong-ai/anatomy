@@ -17,6 +17,7 @@ export const organs: OrganContentDictionary = {
     tissue: "心肌组织",
     comparison: "心脏与大脑",
     conditions: ["冠状动脉疾病", "心律失常", "心脏瓣膜病", "心力衰竭", "心肌病", "心肌炎", "心房颤动", "先天性心脏病"],
+    lessonBody: "血液从右心房经三尖瓣进入右心室，被泵入肺部获取氧气；回到左心房后经二尖瓣进入左心室，由主动脉送往全身。电信号从窦房结出发，经房室结、希氏束、束支到达浦肯野纤维，让心室从心尖开始协调收缩。旋转标本，沿血流与电传导路径辨认这些结构。",
     hotspots: {
       aorta: { label: "主动脉", detail: "最主要的动脉" },
       "left-atrium": { label: "左心房", detail: "接收含氧血" },
@@ -48,6 +49,7 @@ export const organs: OrganContentDictionary = {
     tissue: "大脑皮质",
     comparison: "大脑与眼",
     conditions: ["偏头痛", "脑卒中", "神经退行性疾病", "癫痫", "创伤性脑损伤", "脑膜炎", "多发性硬化", "脑动脉瘤"],
+    lessonBody: "大脑皮层分区各司其职：额叶负责计划与运动，顶叶整合触觉与空间，颞叶处理听觉与语言，枕叶解析视觉；脑干与间脑掌管呼吸、心跳等生命节律。旋转标本，对照功能分区观察脑回的走向。",
     hotspots: {
       frontal: { label: "额叶", detail: "计划与运动" },
       parietal: { label: "顶叶", detail: "感觉整合" },
@@ -71,6 +73,7 @@ export const organs: OrganContentDictionary = {
     tissue: "肺泡组织",
     comparison: "肺与心脏",
     conditions: ["哮喘", "慢性阻塞性肺疾病", "肺炎", "肺栓塞", "肺纤维化", "支气管炎", "囊性纤维化", "肺癌"],
+    lessonBody: "支气管在肺内反复分支，末端是数以亿计的肺泡，气体在此交换：氧气进入血液，二氧化碳排出。右肺有三叶，左肺为容纳心脏只有两叶。旋转标本，比较左右肺的形态差异。",
     hotspots: {
       trachea: { label: "气管", detail: "把空气送入肺内" },
       "right-lung": { label: "右肺", detail: "分为三叶" },
@@ -95,6 +98,7 @@ export const organs: OrganContentDictionary = {
     tissue: "肝小叶",
     comparison: "肝脏与肠",
     conditions: ["脂肪肝", "肝炎", "肝硬化", "胆结石", "血色病", "肝癌", "自身免疫性肝炎", "门静脉高压"],
+    lessonBody: "肝脏是人体最大的实质器官，负责代谢、解毒、合成血浆蛋白并分泌胆汁。门静脉把肠道吸收的营养送进肝脏处理，胆汁经胆道排入十二指肠帮助消化脂肪。旋转标本，观察两个主叶与胆囊窝。",
     hotspots: {
       "right-lobe": { label: "右叶", detail: "最大的肝叶" },
       "left-lobe": { label: "左叶", detail: "跨过中线" },
@@ -117,6 +121,7 @@ export const organs: OrganContentDictionary = {
     tissue: "肾皮质",
     comparison: "肾脏与肝脏",
     conditions: ["肾结石", "慢性肾脏病", "尿路感染", "肾小球肾炎", "多囊肾", "肾性高血压", "急性肾损伤", "肾病综合征"],
+    lessonBody: "肾单位是肾脏的功能单元：肾小球滤过血液形成原尿，肾小管重吸收水分与有用物质，最终生成尿液。肾脏还分泌促红细胞生成素并参与调节血压。旋转标本，注意肾门处血管与输尿管的进出。",
     hotspots: {
       cortex: { label: "肾皮质", detail: "外层过滤区" },
       medulla: { label: "肾髓质", detail: "浓缩尿液" },
@@ -139,6 +144,7 @@ export const organs: OrganContentDictionary = {
     tissue: "视网膜各层",
     comparison: "眼与大脑",
     conditions: ["近视", "白内障", "青光眼", "黄斑变性", "视网膜脱离", "干眼症", "散光", "结膜炎"],
+    lessonBody: "光线依次穿过角膜、晶状体，在视网膜上成像；感光细胞把光信号转为神经冲动，经视神经传向大脑。睫状肌调节晶状体曲度，实现远近对焦。旋转标本，沿光路观察各层结构。",
     hotspots: {
       cornea: { label: "角膜", detail: "透明的聚焦面" },
       iris: { label: "虹膜", detail: "调节进光量" },
@@ -161,6 +167,7 @@ export const organs: OrganContentDictionary = {
     tissue: "肠绒毛",
     comparison: "肠与肝脏",
     conditions: ["肠易激综合征", "炎症性肠病", "乳糜泻", "憩室炎", "肠梗阻", "结直肠息肉", "克罗恩病", "乳糖不耐受"],
+    lessonBody: "小肠是吸收的主要场所：绒毛与微绒毛把吸收面积放大到网球场大小，营养物质经门静脉入肝。大肠回收水分、成形粪便，并容纳肠道菌群。旋转标本，观察小肠皱襞与大肠结肠带的差别。",
     hotspots: {
       duodenum: { label: "十二指肠", detail: "小肠的第一段" },
       jejunum: { label: "空肠", detail: "主要吸收区域" },
@@ -183,6 +190,7 @@ export const organs: OrganContentDictionary = {
     tissue: "胰腺腺泡",
     comparison: "胰腺与肝脏",
     conditions: ["胰腺炎", "1 型糖尿病", "胰腺癌", "2 型糖尿病", "胰腺外分泌功能不全", "胰腺囊肿", "胆源性胰腺炎", "胰岛素瘤"],
+    lessonBody: "胰腺身兼两职：外分泌部每天分泌约 1.5 升胰液，用消化酶分解蛋白质、脂肪与碳水；胰岛分泌胰岛素和胰高血糖素，调节血糖。旋转标本，观察胰头、胰体、胰尾与十二指肠的关系。",
     hotspots: {
       head: { label: "胰头", detail: "被十二指肠环抱" },
       body: { label: "胰体", detail: "横跨脊柱" },
@@ -206,6 +214,7 @@ export const organs: OrganContentDictionary = {
     tissue: "表皮各层",
     comparison: "皮肤与肠",
     conditions: ["湿疹", "银屑病", "黑色素瘤", "痤疮", "蜂窝织炎", "接触性皮炎", "玫瑰痤疮", "白癜风"],
+    lessonBody: "皮肤是人体最大的器官：表皮提供屏障，真皮富含胶原与血管，皮下组织储存脂肪并保温。它承担触觉、温觉、排汗与维生素 D 合成。旋转标本，辨认三层结构的厚度差异。",
     hotspots: {
       epidermis: { label: "表皮", detail: "最外层的保护层" },
       dermis: { label: "真皮", detail: "神经、血管与腺体" },

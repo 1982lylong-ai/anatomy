@@ -18,6 +18,9 @@ export type OrganContent = {
   tissue: string;
   comparison: string;
   conditions: string[];
+  /** Organ-specific lesson copy shown in the lesson modal. Falls back to the
+   *  shared `ui.modal.lessonBody` when a locale has not authored one yet. */
+  lessonBody?: string;
   /** Keyed by hotspot id — the Terminologia Anatomica term is the anchor. */
   hotspots: Record<string, { label: string; detail: string }>;
 };

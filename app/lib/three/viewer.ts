@@ -4,6 +4,7 @@ import gsap from "gsap";
 import type { Hotspot } from "../../i18n/merge";
 import { AnatomyAssetManager, type LoadedOrgan } from "./loaders";
 import { HotspotLayer } from "./hotspots";
+import { ConductionAnimation } from "./conduction";
 
 type ViewerCallbacks = {
   onLoading: (loading: boolean, progress: number) => void;
@@ -75,6 +76,7 @@ export class AnatomyViewer {
   private authorRaycaster = new THREE.Raycaster();
   private liteCache = new Map<string, THREE.LineSegments>();
   private layersOn = false;
+  private conduction: ConductionAnimation | null = null;
 
   constructor(container: HTMLElement, callbacks: ViewerCallbacks) {
     this.container = container;
@@ -398,6 +400,7 @@ export class AnatomyViewer {
       this.assets.update(delta);
       this.dirty = true;
     }
+    this.conduction?.update(delta);
     if (this.hoverProbe) this.resolveHover();
     if (!this.dirty && now >= this.busyUntil) return;
 
@@ -598,11 +601,29 @@ export class AnatomyViewer {
     this.isolated = false;
     this.crossSection = false;
     this.layersOn = false;
+    this.stopConduction();
     (this.plinth.material as THREE.MeshStandardMaterial).opacity = 1;
     (this.contactShadow.material as THREE.MeshBasicMaterial).opacity = 0.62;
     this.applyClipping(false);
     this.liteCache.forEach((lines) => lines.removeFromParent());
     if (this.organ) this.setOrganOpacity(1);
+    this.dirty = true;
+  }
+
+  /** Cardiac conduction pulse: only meaningful on the heart specimen. */
+  playConduction() {
+    if (!this.organ || this.conduction?.group.visible) return;
+    if (!this.conduction) {
+      this.conduction = new ConductionAnimation();
+      this.conduction.group.visible = false;
+      this.organ.pivot.add(this.conduction.group);
+    }
+    this.conduction.play();
+    this.dirty = true;
+  }
+
+  stopConduction() {
+    this.conduction?.stop();
     this.dirty = true;
   }
 
@@ -733,6 +754,7 @@ export class AnatomyViewer {
 
     this.hotspots.dispose();
     this.depthMaterial.dispose();
+    this.conduction?.dispose();
     this.assets.dispose();
     this.scene.environment?.dispose();
     (this.contactShadow.material as THREE.MeshBasicMaterial).map?.dispose();

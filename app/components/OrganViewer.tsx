@@ -27,6 +27,8 @@ type Props = {
   onCompare: () => void;
   quizActive: boolean;
   onQuizExit: () => void;
+  /** Increment to fire the cardiac conduction pulse on the heart specimen. */
+  conductionSignal: number;
 };
 
 /** Fisher–Yates. The quiz asks for every structure once, in a fresh order. */
@@ -162,7 +164,7 @@ function useAuthoringFlag() {
   );
 }
 
-export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCompare, quizActive, onQuizExit }: Props) {
+export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCompare, quizActive, onQuizExit, conductionSignal }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<AnatomyViewer | null>(null);
   const organRef = useRef(organ);
@@ -258,6 +260,11 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
       setProgress(0);
     });
   }, [organ]);
+
+  // Cardiac conduction pulse (heart specimen) — fires from the Animate button.
+  useEffect(() => {
+    if (conductionSignal > 0) viewerRef.current?.playConduction();
+  }, [conductionSignal]);
 
   // A spinning specimen makes "click the mitral valve" a game of chance, so the
   // quiz holds the model still and restores the user's setting on exit.
