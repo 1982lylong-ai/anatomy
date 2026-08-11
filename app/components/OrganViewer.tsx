@@ -247,6 +247,12 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
   }, []);
 
   useEffect(() => {
+    // Tools are per-specimen: reset both the React row and the viewer's
+    // internal flags (isolate plinth, cross-section) on every organ switch,
+    // otherwise a cached organ returns with reset materials while the button
+    // row still claims the tool is active.
+    setActiveTool(null);
+    viewerRef.current?.resetTools();
     viewerRef.current?.setOrgan(organ.model, organ.hotspots, organ.accent).catch(() => {
       setLoading(false);
       setProgress(0);
@@ -273,7 +279,9 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
     if (tool === "zoom") viewer.zoom(-1);
     if (tool === "isolate") setActiveTool(viewer.toggleIsolate() ? tool : null);
     if (tool === "section") setActiveTool(viewer.toggleCrossSection() ? tool : null);
-    if (tool === "layers") setActiveTool(viewer.toggleLayers() ? tool : null);
+    if (tool === "layers") {
+      void viewer.toggleLayers().then((on) => setActiveTool(on ? tool : null));
+    }
     if (tool === "compare") onCompare();
     if (tool === "reset") {
       viewer.reset();

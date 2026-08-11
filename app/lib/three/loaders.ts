@@ -21,6 +21,7 @@ export class AnatomyAssetManager {
   private loader: GLTFLoader;
   private cache = new Map<string, LoadedOrgan>();
   private inflight = new Map<string, Promise<LoadedOrgan>>();
+  private liteCache = new Map<string, Promise<THREE.LineSegments>>();
   private current: LoadedOrgan | null = null;
   private maxAnisotropy: number;
 
@@ -39,6 +40,34 @@ export class AnatomyAssetManager {
   prefetch(url: string) {
     if (this.cache.has(url) || this.inflight.has(url)) return;
     void fetch(url, { priority: "low" } as RequestInit).catch(() => {});
+  }
+
+  /**
+   * Loads the lite wireframe (LINES glb) for an organ, transformed to the same
+   * FIT_SIZE space as the main model so the two align inside the same pivot.
+   */
+  loadLite(url: string): Promise<THREE.LineSegments> {
+    if (!this.liteCache.has(url)) {
+      this.liteCache.set(url, this.parseLite(url));
+    }
+    return this.liteCache.get(url)!;
+  }
+
+  private async parseLite(url: string): Promise<THREE.LineSegments> {
+    const liteUrl = url.replace("/models/", "/models/lite/");
+    const gltf = await this.loader.loadAsync(liteUrl);
+    const lines = gltf.scene.children.find((child) => child.type === "LineSegments") as THREE.LineSegments | undefined;
+    if (!lines) throw new Error(`lite model has no LineSegments: ${liteUrl}`);
+
+    // Mirror the main-model normalisation (FIT_SIZE cube, centred on origin).
+    const box = new THREE.Box3().setFromObject(lines);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const scale = FIT_SIZE / Math.max(size.x, size.y, size.z, 0.001);
+    lines.scale.setScalar(scale);
+    lines.position.copy(center.multiplyScalar(-scale));
+    lines.frustumCulled = false;
+    return lines;
   }
 
   async load(url: string, onProgress?: (progress: number) => void): Promise<LoadedOrgan> {

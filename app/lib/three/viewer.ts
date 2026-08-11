@@ -73,6 +73,8 @@ export class AnatomyViewer {
   private quizMode = false;
   private authoring = false;
   private authorRaycaster = new THREE.Raycaster();
+  private liteCache = new Map<string, THREE.LineSegments>();
+  private layersOn = false;
 
   constructor(container: HTMLElement, callbacks: ViewerCallbacks) {
     this.container = container;
@@ -590,6 +592,20 @@ export class AnatomyViewer {
 
   // ---------------------------------------------------------------- tools
 
+  /** Reverts viewer-side tool state on organ switch so the button row and the
+   *  scene never drift apart (isolate plinth, cross-section flag, clipping). */
+  resetTools() {
+    this.isolated = false;
+    this.crossSection = false;
+    this.layersOn = false;
+    (this.plinth.material as THREE.MeshStandardMaterial).opacity = 1;
+    (this.contactShadow.material as THREE.MeshBasicMaterial).opacity = 0.62;
+    this.applyClipping(false);
+    this.liteCache.forEach((lines) => lines.removeFromParent());
+    if (this.organ) this.setOrganOpacity(1);
+    this.dirty = true;
+  }
+
   setCanvasLabel(label: string) {
     this.renderer.domElement.setAttribute("aria-label", label);
   }
@@ -597,6 +613,52 @@ export class AnatomyViewer {
   setAutoRotate(enabled: boolean) {
     this.autoRotateWanted = enabled;
     if (enabled) this.interactionUntil = 0;
+    this.dirty = true;
+  }
+
+  toggleLayers(): Promise<boolean> {
+    if (!this.organ) return Promise.resolve(false);
+    if (this.layersOn) {
+      this.disableLayers();
+      return Promise.resolve(false);
+    }
+    return this.enableLayers().then(() => this.layersOn);
+  }
+
+  private async enableLayers(): Promise<void> {
+    if (!this.organ || this.layersOn) return;
+    const url = this.organ.url;
+    let lines = this.liteCache.get(url);
+    if (!lines) {
+      lines = await this.assets.loadLite(url);
+      lines.visible = false;
+      this.liteCache.set(url, lines);
+    }
+    // The organ may have been switched while the lite asset was loading.
+    if (!this.organ || this.organ.url !== url || this.disposed) return;
+    this.setOrganOpacity(0.12);
+    this.organ.pivot.add(lines);
+    lines.visible = true;
+    this.layersOn = true;
+    this.dirty = true;
+  }
+
+  private disableLayers(): void {
+    if (!this.organ) return;
+    this.setOrganOpacity(1);
+    this.liteCache.forEach((lines) => lines.removeFromParent());
+    this.layersOn = false;
+    this.dirty = true;
+  }
+
+  private setOrganOpacity(opacity: number) {
+    if (!this.organ) return;
+    this.materials(this.organ).forEach((material) => {
+      material.transparent = opacity < 1;
+      material.opacity = opacity;
+      material.depthWrite = opacity >= 1;
+      material.needsUpdate = true;
+    });
     this.dirty = true;
   }
 
@@ -649,19 +711,6 @@ export class AnatomyViewer {
       material.needsUpdate = true;
     });
     this.dirty = true;
-  }
-
-  toggleLayers() {
-    if (!this.organ) return false;
-    let enabled = false;
-    this.materials(this.organ).forEach((material) => {
-      if (material instanceof THREE.MeshStandardMaterial) {
-        material.wireframe = !material.wireframe;
-        enabled = material.wireframe;
-      }
-    });
-    this.dirty = true;
-    return enabled;
   }
 
   dispose() {
