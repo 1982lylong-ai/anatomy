@@ -21,8 +21,18 @@ export type OrganContent = {
   /** Organ-specific lesson copy shown in the lesson modal. Falls back to the
    *  shared `ui.modal.lessonBody` when a locale has not authored one yet. */
   lessonBody?: string;
+  /** Organ-specific knowledge questions for the quiz modal. Falls back to the
+   *  generic `ui.modal.quiz*` copy when absent. */
+  quiz?: QuizQuestion[];
   /** Keyed by hotspot id — the Terminologia Anatomica term is the anchor. */
   hotspots: Record<string, { label: string; detail: string }>;
+};
+
+export type QuizQuestion = {
+  prompt: string;
+  options: [string, string, string];
+  /** Index of the correct option (0–2). */
+  answer: number;
 };
 
 export type OrganContentDictionary = Record<OrganId, OrganContent>;

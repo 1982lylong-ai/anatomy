@@ -18,6 +18,7 @@ export const organs: OrganContentDictionary = {
     comparison: "Heart vs. brain",
     conditions: ["Coronary artery disease", "Arrhythmia", "Heart valve disorders", "Heart failure", "Cardiomyopathy", "Myocarditis", "Atrial fibrillation", "Congenital heart defects"],
     lessonBody: "Blood enters the right atrium, passes through the tricuspid valve into the right ventricle, and is pumped to the lungs for oxygen; it returns to the left atrium, flows through the mitral valve into the left ventricle, and leaves via the aorta. The electrical impulse starts at the sinoatrial node and travels through the AV node, bundle of His, bundle branches and Purkinje fibres, so the ventricles contract from the apex upward. Rotate the specimen and trace both the blood and electrical pathways.",
+    quiz: [{"prompt":"Where is the heart's natural pacemaker located?","options":["Sinoatrial node in the upper right atrium","Left ventricular wall","Aortic valve root"],"answer":0},{"prompt":"Before reaching the ventricles, where does the electrical signal briefly delay?","options":["Atrioventricular node","Purkinje fibres","Sinoatrial node"],"answer":0}],
     hotspots: {
       "aorta": { label: "Aorta", detail: "Main artery" },
       "left-atrium": { label: "Left Atrium", detail: "Receives oxygenated blood" },
@@ -50,6 +51,7 @@ export const organs: OrganContentDictionary = {
     comparison: "Brain vs. eye",
     conditions: ["Migraine", "Stroke", "Neurodegenerative disease", "Epilepsy", "Traumatic brain injury", "Meningitis", "Multiple sclerosis", "Brain aneurysm"],
     lessonBody: "The cerebral cortex is organised by function: the frontal lobe plans and moves, the parietal lobe integrates touch and space, the temporal lobe handles hearing and language, and the occipital lobe decodes vision. The brainstem and diencephalon govern breathing, heart rate and other vital rhythms. Rotate the specimen and match the gyri to their regions.",
+    quiz: [{"prompt":"Which region of the brain is primarily responsible for processing vision?","options":["Occipital lobe","Frontal lobe","Cerebellum"],"answer":0}],
     hotspots: {
       "frontal": { label: "Frontal Lobe", detail: "Planning & movement" },
       "parietal": { label: "Parietal Lobe", detail: "Sensory integration" },
@@ -74,6 +76,7 @@ export const organs: OrganContentDictionary = {
     comparison: "Lungs vs. heart",
     conditions: ["Asthma", "COPD", "Pneumonia", "Pulmonary embolism", "Pulmonary fibrosis", "Bronchitis", "Cystic fibrosis", "Lung cancer"],
     lessonBody: "The bronchi branch repeatedly and end in hundreds of millions of alveoli, where oxygen enters the blood and carbon dioxide leaves it. The right lung has three lobes; the left has two, making room for the heart. Rotate the specimen and compare the two lungs.",
+    quiz: [{"prompt":"Where does gas exchange (oxygen in, carbon dioxide out) mainly happen?","options":["Alveoli","Bronchi","Pleural cavity"],"answer":0}],
     hotspots: {
       "trachea": { label: "Trachea", detail: "Carries air to the lungs" },
       "right-lung": { label: "Right Lung", detail: "Three lobes" },
@@ -99,6 +102,7 @@ export const organs: OrganContentDictionary = {
     comparison: "Liver vs. intestine",
     conditions: ["Fatty liver disease", "Hepatitis", "Cirrhosis", "Gallstones", "Haemochromatosis", "Liver cancer", "Autoimmune hepatitis", "Portal hypertension"],
     lessonBody: "The liver is the largest solid organ: it metabolises nutrients, detoxifies drugs, synthesises plasma proteins and secretes bile. The portal vein delivers absorbed nutrients from the gut for processing; bile flows through the biliary tract into the duodenum to digest fat. Rotate the specimen and find its two main lobes and the gallbladder fossa.",
+    quiz: [{"prompt":"Which organ secretes bile?","options":["Liver","Gallbladder","Pancreas"],"answer":0}],
     hotspots: {
       "right-lobe": { label: "Right Lobe", detail: "Largest hepatic lobe" },
       "left-lobe": { label: "Left Lobe", detail: "Crosses the midline" },
@@ -122,6 +126,7 @@ export const organs: OrganContentDictionary = {
     comparison: "Kidneys vs. liver",
     conditions: ["Kidney stones", "Chronic kidney disease", "Urinary infection", "Glomerulonephritis", "Polycystic kidney disease", "Renal hypertension", "Acute kidney injury", "Nephrotic syndrome"],
     lessonBody: "The nephron is the kidney's functional unit: the glomerulus filters blood, and the tubules reabsorb water and useful solutes to form urine. The kidneys also secrete erythropoietin and help regulate blood pressure. Rotate the specimen and look at the hilum, where vessels and the ureter enter and leave.",
+    quiz: [{"prompt":"Which part of the nephron filters blood to form the initial filtrate?","options":["Glomerulus","Tubules","Renal pelvis"],"answer":0}],
     hotspots: {
       "cortex": { label: "Renal Cortex", detail: "Outer filtering layer" },
       "medulla": { label: "Renal Medulla", detail: "Concentrates urine" },
@@ -145,6 +150,7 @@ export const organs: OrganContentDictionary = {
     comparison: "Eye vs. brain",
     conditions: ["Myopia", "Cataract", "Glaucoma", "Macular degeneration", "Retinal detachment", "Dry eye disease", "Astigmatism", "Conjunctivitis"],
     lessonBody: "Light passes through the cornea and lens and is focused on the retina, where photoreceptors convert it into nerve impulses carried by the optic nerve to the brain. The ciliary muscle changes lens curvature to focus near and far. Rotate the specimen and follow the optical path.",
+    quiz: [{"prompt":"Which nerve carries the visual signal from the retina to the brain?","options":["Optic nerve","Trigeminal nerve","Facial nerve"],"answer":0}],
     hotspots: {
       "cornea": { label: "Cornea", detail: "Clear focusing surface" },
       "iris": { label: "Iris", detail: "Controls light entry" },
@@ -168,6 +174,7 @@ export const organs: OrganContentDictionary = {
     comparison: "Intestine vs. liver",
     conditions: ["Irritable bowel syndrome", "Inflammatory bowel disease", "Celiac disease", "Diverticulitis", "Intestinal obstruction", "Colorectal polyps", "Crohn's disease", "Lactose intolerance"],
     lessonBody: "The small intestine is the main site of absorption: villi and microvilli expand its surface to about the size of a tennis court, and absorbed nutrients travel via the portal vein to the liver. The large intestine reclaims water, forms stool, and hosts the gut microbiota. Rotate the specimen and compare the small bowel's folds with the taeniae coli.",
+    quiz: [{"prompt":"Where are nutrients (sugars, amino acids, fatty acids) mainly absorbed?","options":["Small intestine","Large intestine","Stomach"],"answer":0}],
     hotspots: {
       "duodenum": { label: "Duodenum", detail: "First small-intestine segment" },
       "jejunum": { label: "Jejunum", detail: "Major absorption region" },
@@ -191,6 +198,7 @@ export const organs: OrganContentDictionary = {
     comparison: "Pancreas vs. liver",
     conditions: ["Pancreatitis", "Type 1 diabetes", "Pancreatic cancer", "Type 2 diabetes", "Exocrine insufficiency", "Pancreatic cysts", "Gallstone pancreatitis", "Insulinoma"],
     lessonBody: "The pancreas has a dual role: its exocrine part secretes about 1.5 litres of pancreatic juice a day, digesting protein, fat and carbohydrate, while the islets of Langerhans secrete insulin and glucagon to regulate blood glucose. Rotate the specimen and see how the head, body and tail relate to the duodenum.",
+    quiz: [{"prompt":"Which part of the pancreas secretes insulin and glucagon?","options":["Islet cells","Exocrine acini","Pancreatic duct"],"answer":0}],
     hotspots: {
       "head": { label: "Head", detail: "Cradled by the duodenum" },
       "body": { label: "Body", detail: "Crosses the spine" },
@@ -215,6 +223,7 @@ export const organs: OrganContentDictionary = {
     comparison: "Skin vs. intestine",
     conditions: ["Eczema", "Psoriasis", "Melanoma", "Acne vulgaris", "Cellulitis", "Contact dermatitis", "Rosacea", "Vitiligo"],
     lessonBody: "Skin is the largest organ: the epidermis provides the barrier, the dermis is rich in collagen and blood vessels, and the hypodermis stores fat and insulates. It senses touch and temperature, sweats, and synthesises vitamin D. Rotate the specimen and compare the three layers.",
+    quiz: [{"prompt":"In which layer of the skin is vitamin D mainly synthesised?","options":["Epidermis","Dermis","Hypodermis"],"answer":0}],
     hotspots: {
       "epidermis": { label: "Epidermis", detail: "Outer protective layer" },
       "dermis": { label: "Dermis", detail: "Nerves, vessels & glands" },

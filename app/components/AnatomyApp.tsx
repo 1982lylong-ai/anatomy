@@ -28,7 +28,7 @@ import type { OrganId } from "../lib/anatomy-data";
 import type { LocaleConfig } from "../i18n/config";
 import { locales } from "../i18n/config";
 import { buildOrgans, indexOrgans, type Organ } from "../i18n/merge";
-import { format, type Dictionary, type UiDictionary } from "../i18n/types";
+import { format, type Dictionary, type QuizQuestion, type UiDictionary } from "../i18n/types";
 
 type Modal = "lesson" | "quiz" | "animation" | "system" | null;
 
@@ -348,6 +348,52 @@ const MODAL_ICON: Record<Exclude<Modal, null>, string> = {
   lesson: "✦",
 };
 
+/**
+ * Organ-specific knowledge quiz: one question at a time with immediate
+ * right/wrong feedback, advancing automatically to the next question and
+ * closing after the last one.
+ */
+function OrganQuiz({ questions, onClose }: { questions: QuizQuestion[]; onClose: () => void }) {
+  const [qi, setQi] = useState(0);
+  const [picked, setPicked] = useState<number | null>(null);
+  const question = questions[qi];
+
+  useEffect(() => {
+    if (picked === null) return;
+    const timer = window.setTimeout(() => {
+      if (qi + 1 >= questions.length) onClose();
+      else {
+        setQi((value) => value + 1);
+        setPicked(null);
+      }
+    }, 1500);
+    return () => window.clearTimeout(timer);
+  }, [picked, qi, questions.length, onClose]);
+
+  return (
+    <div className="quiz-options">
+      <p>{question.prompt}</p>
+      {question.options.map((option, index) => (
+        <button
+          key={index}
+          type="button"
+          disabled={picked !== null}
+          className={picked === null ? "" : index === question.answer ? "correct" : index === picked ? "wrong" : ""}
+          onClick={() => setPicked(index)}
+        >
+          {option}
+        </button>
+      ))}
+      {picked !== null && (
+        <div className="quiz-feedback">
+          {picked === question.answer ? "✓ " : `✗ ${question.options[question.answer]} — `}
+          {picked === question.answer ? "答对了" : "正确答案已标出"}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LearningModal({
   type,
   organ,
@@ -360,6 +406,7 @@ function LearningModal({
   onClose: () => void;
 }) {
   const vars = { organ: organ.name, location: organ.location };
+  const [showQuiz, setShowQuiz] = useState(false);
   const title =
     type === "quiz" ? format(t.modal.quizTitle, vars)
     : type === "animation" ? format(t.modal.motionTitle, vars)
@@ -382,12 +429,16 @@ function LearningModal({
         <em>{t.modal.guided}</em>
         <h2 id="modal-title">{title}</h2>
         {type === "quiz" ? (
-          <div className="quiz-options">
-            <p>{format(t.modal.quizPrompt, vars)}</p>
-            <button onClick={onClose}>{t.modal.quizA}</button>
-            <button onClick={onClose}>{t.modal.quizB}</button>
-            <button onClick={onClose}>{t.modal.quizC}</button>
-          </div>
+          organ.quiz?.length ? (
+            <OrganQuiz questions={organ.quiz} onClose={onClose} />
+          ) : (
+            <div className="quiz-options">
+              <p>{format(t.modal.quizPrompt, vars)}</p>
+              <button onClick={onClose}>{t.modal.quizA}</button>
+              <button onClick={onClose}>{t.modal.quizB}</button>
+              <button onClick={onClose}>{t.modal.quizC}</button>
+            </div>
+          )
         ) : type === "system" ? (
           <>
             <p>{format(t.modal.systemIntro, vars)}</p>
@@ -404,11 +455,18 @@ function LearningModal({
             <button className="lesson-button" onClick={onClose}>{t.modal.continueExploring} <ArrowRight size={16} /></button>
           </>
         ) : (
-          <>
-            <p>{organ.lessonBody ?? t.modal.lessonBody}</p>
-            <div className={`modal-demo ${type === "animation" ? "moving" : ""}`}><OrganArt organ={organ} asset="organ" alt="" /></div>
-            <button className="lesson-button" onClick={onClose}>{t.modal.continueExploring} <ArrowRight size={16} /></button>
-          </>
+          showQuiz && organ.quiz?.length ? (
+            <OrganQuiz questions={organ.quiz} onClose={onClose} />
+          ) : (
+            <>
+              <p>{organ.lessonBody ?? t.modal.lessonBody}</p>
+              <div className={`modal-demo ${type === "animation" ? "moving" : ""}`}><OrganArt organ={organ} asset="organ" alt="" /></div>
+              {organ.quiz?.length ? (
+                <button className="lesson-button" onClick={() => setShowQuiz(true)}>{t.info.quiz} <ArrowRight size={16} /></button>
+              ) : null}
+              <button className="lesson-button" onClick={onClose}>{t.modal.continueExploring} <ArrowRight size={16} /></button>
+            </>
+          )
         )}
       </section>
     </div>
