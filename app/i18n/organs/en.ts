@@ -18,6 +18,48 @@ export const organs: OrganContentDictionary = {
     comparison: "Heart vs. brain",
     conditions: ["Coronary artery disease", "Arrhythmia", "Heart valve disorders", "Heart failure", "Cardiomyopathy", "Myocarditis", "Atrial fibrillation", "Congenital heart defects"],
     lessonBody: "Blood enters the right atrium, passes through the tricuspid valve into the right ventricle, and is pumped to the lungs for oxygen; it returns to the left atrium, flows through the mitral valve into the left ventricle, and leaves via the aorta. The electrical impulse starts at the sinoatrial node and travels through the AV node, bundle of His, bundle branches and Purkinje fibres, so the ventricles contract from the apex upward. Rotate the specimen and trace both the blood and electrical pathways.",
+    pathology: [
+      {
+        id: "cad",
+        title: "Coronary Artery Disease",
+        summary: "Atherosclerotic plaques gradually narrow or block the coronary arteries that supply the heart muscle, reducing blood flow to the myocardium.",
+        keyPoints: [
+          "Plaques form over years as cholesterol and inflammatory cells deposit in the artery wall (atherosclerosis).",
+          "When the lumen narrows significantly, exertion or stress can outstrip the oxygen supply, causing angina (chest tightness or pain, sometimes radiating to the left arm or jaw).",
+          "A ruptured plaque with a superimposed clot can fully occlude an artery, causing an acute myocardial infarction — heart muscle begins to die and the vessel must be reopened urgently.",
+          "Key risk factors: smoking, hypertension, diabetes, dyslipidaemia, obesity, physical inactivity, and family history.",
+        ],
+        patientNote:
+          "Sustained chest pain or tightness lasting more than 15 minutes, not relieved by nitroglycerin, or accompanied by sweating or nausea — call emergency services immediately. Prevention centres on quitting smoking and controlling blood pressure, glucose and lipids.",
+      },
+      {
+        id: "valvular",
+        title: "Heart Valve Disease",
+        summary: "Valves act as one-way doors in the heart. Stenosis (a valve that fails to open fully) or regurgitation (a valve that fails to close fully) obstructs or reverses blood flow and overloads the heart.",
+        keyPoints: [
+          "Mitral stenosis: blood cannot pass easily from the left atrium into the left ventricle; atrial pressure rises, blood backs up into the lungs, and breathlessness follows.",
+          "Aortic stenosis: the left ventricle must push against a narrowed outlet; the muscle thickens under chronic overload and may eventually fail.",
+          "Regurgitation: with every beat some blood flows backwards, so the heart has to pump harder and gradually enlarges.",
+          "Common causes: rheumatic fever (still seen in parts of China), age-related valve calcification, and infective endocarditis.",
+        ],
+        patientNote:
+          "Breathlessness on exertion, fatigue, or waking short of breath at night warrants a cardiology review with an echocardiogram. Tell your doctor about any valve condition before dental work or invasive procedures to prevent infective endocarditis.",
+      },
+      {
+        id: "heart-failure",
+        title: "Heart Failure",
+        summary: "The heart's pumping ability declines and can no longer meet the body's needs — the heart has not stopped, it is simply struggling to keep up.",
+        keyPoints: [
+          "Left-sided failure: blood backs up in the lungs — breathlessness on exertion, waking at night gasping, and needing to sit up to breathe.",
+          "Right-sided failure: blood backs up in the body — swollen ankles, prominent neck veins, abdominal bloating and poor appetite.",
+          "Common causes: coronary artery disease (especially after a heart attack), long-standing hypertension, valve disease, and cardiomyopathy.",
+          "Treatment is long-term management: medications (ACE inhibitors/ARBs, beta-blockers, SGLT2 inhibitors, diuretics) plus treatment of the underlying cause and lifestyle changes — this markedly improves quality of life.",
+        ],
+        patientNote:
+          "Weigh yourself each morning — a gain of more than 2 kg over a few days usually means fluid retention and warrants contacting your doctor about adjusting diuretics. Low-salt diet, regular medication and not stopping drugs on your own are the key to stability.",
+      },
+    ],
+    pathologyNote: "This is educational content about common heart conditions and is not a substitute for professional diagnosis or treatment. Please seek medical care if you have symptoms.",
     quiz: [{"prompt":"Where is the heart's natural pacemaker located?","options":["Sinoatrial node in the upper right atrium","Left ventricular wall","Aortic valve root"],"answer":0},{"prompt":"Before reaching the ventricles, where does the electrical signal briefly delay?","options":["Atrioventricular node","Purkinje fibres","Sinoatrial node"],"answer":0}],
     hotspots: {
       "aorta": { label: "Aorta", detail: "Main artery" },

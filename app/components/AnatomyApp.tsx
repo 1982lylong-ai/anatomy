@@ -30,7 +30,7 @@ import { locales } from "../i18n/config";
 import { buildOrgans, indexOrgans, type Organ } from "../i18n/merge";
 import { format, type Dictionary, type QuizQuestion, type UiDictionary } from "../i18n/types";
 
-type Modal = "lesson" | "quiz" | "animation" | "system" | null;
+type Modal = "lesson" | "quiz" | "animation" | "system" | "pathology" | null;
 
 /**
  * Renders an organ illustration, or its accent glyph for organs that ship as a
@@ -319,7 +319,7 @@ export function AnatomyApp({ locale, dictionary }: { locale: LocaleConfig; dicti
         <article>
           <header><div><em>{t.cards.clinicalNotes}</em><h3>{t.cards.commonConditions}</h3></div><FileText size={17} /></header>
           <ul>{organ.conditions.map((condition) => <li key={condition}>{condition}</li>)}</ul>
-          <button onClick={() => setModal("lesson")}>{t.cards.seeAll} <ArrowRight size={14} /></button>
+          <button onClick={() => setModal(organ.pathology?.length ? "pathology" : "lesson")}>{t.cards.seeAll} <ArrowRight size={14} /></button>
         </article>
         <article className="system-card">
           <header><div><em>{t.cards.whereItWorks}</em><h3>{organ.system}</h3></div><BrainCircuit size={17} /></header>
@@ -346,6 +346,7 @@ const MODAL_ICON: Record<Exclude<Modal, null>, string> = {
   animation: "▶",
   system: "⌖",
   lesson: "✦",
+  pathology: "✚",
 };
 
 /**
@@ -413,6 +414,7 @@ function LearningModal({
     // Avoids gluing onto `system`, whose wording varies per organ, and stays
     // grammatical for the plural organs too.
     : type === "system" ? format(t.modal.bodyTitle, vars)
+    : type === "pathology" ? t.cards.clinicalNotes
     : format(t.modal.insideTitle, vars);
 
   return (
@@ -454,6 +456,24 @@ function LearningModal({
             </dl>
             <button className="lesson-button" onClick={onClose}>{t.modal.continueExploring} <ArrowRight size={16} /></button>
           </>
+        ) : type === "pathology" && organ.pathology?.length ? (
+          <div className="pathology-list">
+            {organ.pathology.map((section) => (
+              <article key={section.id} className="pathology-section">
+                <h3>{section.title}</h3>
+                <p className="pathology-summary">{section.summary}</p>
+                <ul className="pathology-points">
+                  {section.keyPoints.map((point) => <li key={point}>{point}</li>)}
+                </ul>
+                <div className="pathology-patient-note">
+                  <Stethoscope size={15} aria-hidden />
+                  <p>{section.patientNote}</p>
+                </div>
+              </article>
+            ))}
+            {organ.pathologyNote ? <p className="pathology-disclaimer">{organ.pathologyNote}</p> : null}
+            <button className="lesson-button" onClick={onClose}>{t.modal.continueExploring} <ArrowRight size={16} /></button>
+          </div>
         ) : (
           showQuiz && organ.quiz?.length ? (
             <OrganQuiz questions={organ.quiz} onClose={onClose} />

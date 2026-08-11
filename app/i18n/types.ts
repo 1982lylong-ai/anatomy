@@ -2,6 +2,16 @@ import type { OrganId } from "../lib/anatomy-data";
 
 /** Prose for one organ. Structure (positions, colours, model) lives in
  *  `anatomy-data.ts`; only translatable text belongs here. */
+/** One patient-facing disease primer. Optional per locale — locales without
+ *  authored pathology copy simply show the plain conditions list. */
+export type PathologySection = {
+  id: string;
+  title: string;
+  summary: string;
+  keyPoints: string[];
+  patientNote: string;
+};
+
 export type OrganContent = {
   name: string;
   system: string;
@@ -26,6 +36,10 @@ export type OrganContent = {
   quiz?: QuizQuestion[];
   /** Keyed by hotspot id — the Terminologia Anatomica term is the anchor. */
   hotspots: Record<string, { label: string; detail: string }>;
+  /** Disease primers shown from the clinical-notes card (optional per locale). */
+  pathology?: PathologySection[];
+  /** Disclaimer line under the pathology list (optional per locale). */
+  pathologyNote?: string;
 };
 
 export type QuizQuestion = {

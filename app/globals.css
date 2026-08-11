@@ -818,3 +818,14 @@ button.organ-card-image:focus-visible { outline: 2px solid #8b6fc4; outline-offs
   .quiz-answer > div strong { font-size: 17px; }
   .authoring-panel { inset-inline-start: 10px; max-width: calc(100% - 20px); bottom: 82px; }
 }
+
+/* ---- pathology primer (disease cards inside the learning modal) ---- */
+.pathology-list { text-align: start; display: grid; gap: 18px; margin-top: 6px; }
+.pathology-section { padding: 16px 18px; border: 1px solid var(--line); border-radius: 18px; background: #fffdf8; }
+.pathology-section h3 { margin: 0 0 6px; font: 600 17px/1.35 var(--font-serif), serif; color: #4a3a2e; }
+.pathology-summary { margin: 0 0 10px; color: #6e655f; font: 500 14px/1.6 var(--font-serif), serif; }
+.pathology-points { margin: 0; padding-inline-start: 18px; display: grid; gap: 6px; color: #57493d; font: 400 13.5px/1.65 var(--font-serif), serif; }
+.pathology-patient-note { margin-top: 12px; display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; background: #fdeee8; color: #7a3b2a; }
+.pathology-patient-note svg { flex: none; margin-top: 2px; color: #c2573f; }
+.pathology-patient-note p { margin: 0; font: 500 13px/1.6 var(--font-serif), serif; }
+.pathology-disclaimer { margin: 4px 0 0; color: var(--muted); font-size: 11.5px; line-height: 1.6; text-align: center; }
