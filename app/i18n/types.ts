@@ -38,6 +38,8 @@ export type OrganContent = {
   hotspots: Record<string, { label: string; detail: string }>;
   /** Optional labels for disease dots (pathology mode); falls back to TA term. */
   pathologyHotspots?: Record<string, { label: string; detail: string }>;
+  /** Optional labels for the 3D morphology switcher (healthy/disease states). */
+  morphology?: Record<"healthy" | "dilated" | "stenotic", string>;
   /** Disease primers shown from the clinical-notes card (optional per locale). */
   pathology?: PathologySection[];
   /** Disclaimer line under the pathology list (optional per locale). */

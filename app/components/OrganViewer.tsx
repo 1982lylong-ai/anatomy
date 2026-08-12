@@ -178,6 +178,7 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [heartbeatPlaying, setHeartbeatPlaying] = useState(false);
   const [heartbeatSpeed, setHeartbeatSpeed] = useState(1);
+  const [morphKey, setMorphKey] = useState<"healthy" | "dilated" | "stenotic">("healthy");
 
   // Opt-in coordinate probe for placing hotspots — not a user-facing feature.
   const authoring = useAuthoringFlag();
@@ -314,6 +315,11 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
     viewerRef.current?.setHeartbeatSpeed(next);
   };
 
+  const handleMorph = (key: "healthy" | "dilated" | "stenotic") => {
+    setMorphKey(key);
+    viewerRef.current?.setPathologyMorph(key);
+  };
+
   const tools = [
     { id: "rotate", label: t.tools.rotate, icon: RotateCcw },
     { id: "zoom", label: t.tools.zoom, icon: Search },
@@ -430,6 +436,17 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
           <button type="button" onClick={cycleHeartbeatSpeed} aria-label="Heartbeat speed">
             {heartbeatSpeed}x
           </button>
+        </div>
+      )}
+
+      {organ.id === "heart" && pathologyMode && !quizActive && organ.morphology && (
+        <div className="morph-controls" role="group" aria-label="Disease states">
+          {(Object.keys(organ.morphology) as ("healthy" | "dilated" | "stenotic")[]).map((key) => (
+            <button key={key} type="button" className={morphKey === key ? "active" : ""}
+              aria-pressed={morphKey === key} onClick={() => handleMorph(key)}>
+              {organ.morphology![key]}
+            </button>
+          ))}
         </div>
       )}
 

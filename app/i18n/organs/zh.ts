@@ -81,6 +81,11 @@ export const organs: OrganContentDictionary = {
       lcx: { label: "左旋支（LCX）", detail: "沿房室沟走行，供应左心室侧后壁（示意位置）" },
       "aortic-valve": { label: "主动脉瓣", detail: "左心室与主动脉之间的瓣膜，狭窄或关闭不全常见于老年人" },
     },
+    morphology: {
+      healthy: "健康",
+      dilated: "心衰（扩大）",
+      stenotic: "主动脉瓣狭窄",
+    },
   },
   brain: {
     name: "大脑",

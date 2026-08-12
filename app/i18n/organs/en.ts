@@ -81,6 +81,11 @@ export const organs: OrganContentDictionary = {
       "lcx": { label: "Left Circumflex (LCX)", detail: "Runs in the atrioventricular groove, supplying the lateral and posterior wall (schematic position)" },
       "aortic-valve": { label: "Aortic Valve", detail: "The valve between the left ventricle and the aorta; stenosis or regurgitation is common in older adults" },
     },
+    morphology: {
+      "healthy": "Healthy",
+      "dilated": "Heart failure (dilated)",
+      "stenotic": "Aortic stenosis",
+    },
   },
   brain: {
     name: "Brain",

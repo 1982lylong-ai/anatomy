@@ -81,6 +81,10 @@ export class AnatomyViewer {
   private anatomyHotspots: Hotspot[] = [];
   private conduction: ConductionAnimation | null = null;
   private heartbeat: HeartbeatAnimation | null = null;
+  private pathologyMorph: "healthy" | "dilated" | "stenotic" = "healthy";
+  private morphTarget = { dilation: 0, hypertrophy: 0 };
+  private morphCurrent = { dilation: 0, hypertrophy: 0 };
+  private dilatedTint = new THREE.Color(0xc47a88);
 
   constructor(container: HTMLElement, callbacks: ViewerCallbacks) {
     this.container = container;
@@ -407,7 +411,7 @@ export class AnatomyViewer {
     }
     this.conduction?.update(delta);
     this.heartbeat?.update(delta);
-    if (this.heartbeat) this.syncHeartbeatUniforms();
+    if (this.organ) this.syncMaterialUniforms(delta);
     if (this.hoverProbe) this.resolveHover();
     if (!this.dirty && now >= this.busyUntil) return;
 
@@ -627,6 +631,10 @@ export class AnatomyViewer {
     // the next play rebuilds them on the fresh pivot.
     this.conduction = null;
     this.heartbeat = null;
+    // Reset any pathology morph to healthy and snap the tint back instantly.
+    this.pathologyMorph = "healthy";
+    this.morphTarget = { dilation: 0, hypertrophy: 0 };
+    this.morphCurrent = { dilation: 0, hypertrophy: 0 };
     (this.plinth.material as THREE.MeshStandardMaterial).opacity = 1;
     (this.contactShadow.material as THREE.MeshBasicMaterial).opacity = 0.62;
     this.applyClipping(false);
@@ -693,19 +701,57 @@ export class AnatomyViewer {
     this.dirty = true;
   }
 
-  /** Copies the cycle's contraction amounts onto the heart material uniforms. */
-  private syncHeartbeatUniforms() {
-    if (!this.heartbeat || !this.organ) return;
-    const { atrial, ventricular } = this.heartbeat.deformState;
+  /** Morphs the specimen between healthy and disease states (heart only). */
+  setPathologyMorph(mode: "healthy" | "dilated" | "stenotic") {
+    this.pathologyMorph = mode;
+    if (mode === "dilated") {
+      // Dilated heart failure: ventricles balloon outward, beats weaken.
+      this.morphTarget = { dilation: 0.16, hypertrophy: 0 };
+      this.heartbeat?.setContractility(0.55);
+      this.heartbeat?.setValveStenosis(false);
+    } else if (mode === "stenotic") {
+      // Aortic stenosis: concentric hypertrophy + calcified, barely-opening valve.
+      this.morphTarget = { dilation: 0, hypertrophy: 0.11 };
+      this.heartbeat?.setContractility(1);
+      this.heartbeat?.setValveStenosis(true);
+    } else {
+      this.morphTarget = { dilation: 0, hypertrophy: 0 };
+      this.heartbeat?.setContractility(1);
+      this.heartbeat?.setValveStenosis(false);
+    }
+    this.dirty = true;
+  }
+
+  /** Copies contraction + pathology morph onto the heart material uniforms and
+   *  eases the tint toward the disease state, every frame. */
+  private syncMaterialUniforms(delta: number) {
+    if (!this.organ) return;
+    const ease = 1 - Math.exp(-delta * 6);
+    this.morphCurrent.dilation += (this.morphTarget.dilation - this.morphCurrent.dilation) * ease;
+    this.morphCurrent.hypertrophy += (this.morphTarget.hypertrophy - this.morphCurrent.hypertrophy) * ease;
+
+    const { atrial, ventricular } = this.heartbeat?.deformState ?? { atrial: 0, ventricular: 0 };
     for (const mesh of this.organ.meshes) {
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       for (const material of materials) {
         const uniforms = material.userData?.heartbeatUniforms as
-          | { atrialAmount?: { value: number }; ventricularAmount?: { value: number } }
+          | {
+              atrialAmount?: { value: number };
+              ventricularAmount?: { value: number };
+              dilationAmount?: { value: number };
+              hypertrophyAmount?: { value: number };
+            }
           | undefined;
-        if (uniforms?.atrialAmount && uniforms?.ventricularAmount) {
-          uniforms.atrialAmount.value = atrial;
-          uniforms.ventricularAmount.value = ventricular;
+        if (uniforms?.atrialAmount) uniforms.atrialAmount.value = atrial;
+        if (uniforms?.ventricularAmount) uniforms.ventricularAmount.value = ventricular;
+        if (uniforms?.dilationAmount) uniforms.dilationAmount.value = this.morphCurrent.dilation;
+        if (uniforms?.hypertrophyAmount) uniforms.hypertrophyAmount.value = this.morphCurrent.hypertrophy;
+
+        if (material instanceof THREE.MeshStandardMaterial) {
+          const original = material.userData?.originalColor as THREE.Color | undefined;
+          if (!original) continue;
+          const target = this.pathologyMorph === "dilated" ? this.dilatedTint : original;
+          material.color.lerp(target, ease);
         }
       }
     }

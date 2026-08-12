@@ -94,6 +94,11 @@ export class HeartbeatAnimation {
   private speed = 1;
   private cycleSeconds = CYCLE_DEFAULT_SECONDS;
   private onPhase?: (phase: number) => void;
+  /** Contractility multiplier — reduced in heart failure, so the weakened
+   *  heart visibly beats more feebly. */
+  private contractility = 1;
+  /** Aortic-valve stenosis: valve calcifies and can no longer open fully. */
+  private stenosis = false;
 
   constructor(onPhase?: (phase: number) => void) {
     this.onPhase = onPhase;
@@ -115,6 +120,7 @@ export class HeartbeatAnimation {
         new THREE.Vector3(spec.position[0] + spec.up[0], spec.position[1] + spec.up[1], spec.position[2] + spec.up[2]),
       );
       disc.name = spec.kind;
+      disc.userData.id = spec.id;
       disc.scale.setScalar(0.001); // closed by default
       this.group.add(disc);
       this.valves.push({ disc, open: 0 });
@@ -159,6 +165,21 @@ export class HeartbeatAnimation {
     this.speed = Math.max(0.1, speed);
   }
 
+  /** Weaken (or restore) the contraction — dilated heart failure beats feebly. */
+  setContractility(value: number) {
+    this.contractility = Math.max(0.2, value);
+  }
+
+  /** Toggle aortic-valve stenosis: calcifies the leaflet disc and limits its
+   *  opening so the narrowing is visible. */
+  setValveStenosis(enabled: boolean) {
+    this.stenosis = enabled;
+    for (const { disc } of this.valves) {
+      if (disc.userData.id !== "aortic") continue;
+      (disc.material as THREE.MeshBasicMaterial).color.set(enabled ? 0xcfd4d8 : 0xffe3d0);
+    }
+  }
+
   play() {
     this.phase = 0;
     this.playing = true;
@@ -195,12 +216,12 @@ export class HeartbeatAnimation {
     let atrial = 0;
     let ventricular = 0;
     if (t < 0.12) {
-      atrial = -ATRIAL_CONTRACT * Math.sin((t / 0.12) * Math.PI);
+      atrial = -ATRIAL_CONTRACT * Math.sin((t / 0.12) * Math.PI) * this.contractility;
     } else if (t < 0.3) {
       atrial = 0;
-      ventricular = -VENTRICULAR_CONTRACT * smoothstep(0.12, 0.22, t);
+      ventricular = -VENTRICULAR_CONTRACT * smoothstep(0.12, 0.22, t) * this.contractility;
     } else if (t < 0.6) {
-      ventricular = -VENTRICULAR_CONTRACT;
+      ventricular = -VENTRICULAR_CONTRACT * this.contractility;
     }
     this.setDeformation(atrial, ventricular);
 
@@ -208,14 +229,15 @@ export class HeartbeatAnimation {
     //     outflow (aortic/pulmonary) closed otherwise ---
     const ejection = t >= 0.28 && t < 0.62;
     const openAV = ejection ? 0.001 : 1;
-    const openOutflow = ejection ? 1 : 0.001;
+    // A stenotic aortic valve cannot open fully — it stays partly shut.
+    const openOutflow = ejection ? (this.stenosis ? 0.55 : 1) : 0.001;
     for (const v of this.valves) {
-      const target = v.disc.name === "av" ? openAV : openOutflow;
+      const isAortic = v.disc.userData.id === "aortic";
+      const target = v.disc.name === "av" ? openAV : (isAortic && this.stenosis ? 0.55 : openOutflow);
       // smooth approach
       v.disc.scale.setScalar(v.disc.scale.x + (target - v.disc.scale.x) * 0.35);
       v.open = v.disc.scale.x;
     }
-    void this.valves;
   }
 
   private setDeformation(atrial: number, ventricular: number) {

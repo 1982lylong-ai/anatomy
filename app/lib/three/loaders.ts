@@ -133,6 +133,8 @@ export class AnatomyAssetManager {
         material.depthTest = true;
         material.side = THREE.FrontSide;
         if (material instanceof THREE.MeshStandardMaterial) {
+          // Remember the tint for pathology morphing (dilated heart darkens).
+          material.userData.originalColor = material.color.clone();
           // A tighter specular lobe sparkles on any surface with normal detail;
           // holding roughness a little higher keeps highlights stable while the
           // model turns.
@@ -268,6 +270,11 @@ function injectHeartbeatShaders(mesh: THREE.Mesh) {
       previous?.(shader, renderer);
       shader.uniforms.atrialAmount = { value: 0 };
       shader.uniforms.ventricularAmount = { value: 0 };
+      // Pathology morph targets (0 = healthy). `dilationAmount` blows the
+      // ventricles outward (dilated heart failure); `hypertrophyAmount`
+      // thickens the ventricular wall (concentric hypertrophy).
+      shader.uniforms.dilationAmount = { value: 0 };
+      shader.uniforms.hypertrophyAmount = { value: 0 };
       // Exposed for the viewer's per-frame sync (see syncHeartbeatUniforms).
       material.userData.heartbeatUniforms = shader.uniforms;
       shader.vertexShader =
@@ -275,10 +282,13 @@ function injectHeartbeatShaders(mesh: THREE.Mesh) {
         attribute float ventricularWeight;
         uniform float atrialAmount;
         uniform float ventricularAmount;
+        uniform float dilationAmount;
+        uniform float hypertrophyAmount;
 ` + shader.vertexShader.replace(
           "#include <begin_vertex>",
           `#include <begin_vertex>
-          transformed += objectNormal * (atrialAmount * atrialWeight + ventricularAmount * ventricularWeight);`,
+          transformed += objectNormal * (atrialAmount * atrialWeight + ventricularAmount * ventricularWeight);
+          transformed += objectNormal * (dilationAmount * ventricularWeight + hypertrophyAmount * ventricularWeight * 0.55);`,
         );
     };
     // Force a recompile so the hook takes effect.
