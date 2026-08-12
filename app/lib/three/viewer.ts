@@ -6,6 +6,7 @@ import { AnatomyAssetManager, type LoadedOrgan } from "./loaders";
 import { HotspotLayer } from "./hotspots";
 import { ConductionAnimation } from "./conduction";
 import { HeartbeatAnimation } from "./heartbeat";
+import { DissectionLayer } from "./dissection";
 
 type ViewerCallbacks = {
   onLoading: (loading: boolean, progress: number) => void;
@@ -85,6 +86,8 @@ export class AnatomyViewer {
   private morphTarget = { dilation: 0, hypertrophy: 0 };
   private morphCurrent = { dilation: 0, hypertrophy: 0 };
   private dilatedTint = new THREE.Color(0xc47a88);
+  private dissection: DissectionLayer | null = null;
+  private dissectionLevel = 0;
 
   constructor(container: HTMLElement, callbacks: ViewerCallbacks) {
     this.container = container;
@@ -635,6 +638,9 @@ export class AnatomyViewer {
     this.pathologyMorph = "healthy";
     this.morphTarget = { dilation: 0, hypertrophy: 0 };
     this.morphCurrent = { dilation: 0, hypertrophy: 0 };
+    this.dissection?.dispose();
+    this.dissection = null;
+    this.dissectionLevel = 0;
     (this.plinth.material as THREE.MeshStandardMaterial).opacity = 1;
     (this.contactShadow.material as THREE.MeshBasicMaterial).opacity = 0.62;
     this.applyClipping(false);
@@ -690,6 +696,34 @@ export class AnatomyViewer {
 
   setHeartbeatSpeed(speed: number) {
     this.heartbeat?.setSpeed(speed);
+  }
+
+  /** Peels the heart open layer by layer (chambers → valves → conduction).
+   *  Level 0 restores the solid specimen. Heart only. */
+  setDissectionLevel(level: number) {
+    if (!this.organ || this.organ.url !== "/models/heart.glb") return;
+    this.dissectionLevel = Math.max(0, Math.min(3, Math.floor(level)));
+    if (this.dissectionLevel <= 0) {
+      const d = this.dissection;
+      if (d) {
+        d.dispose();
+        this.organ.pivot.remove(d.group);
+      }
+      this.dissection = null;
+      this.setOrganOpacity(1);
+    } else {
+      if (!this.dissection) {
+        this.dissection = new DissectionLayer();
+        this.organ.pivot.add(this.dissection.group);
+      }
+      this.dissection.setLayer(this.dissectionLevel);
+      this.setOrganOpacity(0.15);
+    }
+    this.dirty = true;
+  }
+
+  get currentDissectionLevel(): number {
+    return this.dissectionLevel;
   }
 
   get heartbeatSpeed(): number {

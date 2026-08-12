@@ -179,6 +179,7 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
   const [heartbeatPlaying, setHeartbeatPlaying] = useState(false);
   const [heartbeatSpeed, setHeartbeatSpeed] = useState(1);
   const [morphKey, setMorphKey] = useState<"healthy" | "dilated" | "stenotic">("healthy");
+  const [dissectionLevel, setDissectionLevel] = useState(0);
 
   // Opt-in coordinate probe for placing hotspots — not a user-facing feature.
   const authoring = useAuthoringFlag();
@@ -258,6 +259,9 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
     // otherwise a cached organ returns with reset materials while the button
     // row still claims the tool is active.
     setActiveTool(null);
+    setDissectionLevel(0);
+    setMorphKey("healthy");
+    setHeartbeatPlaying(false);
     viewerRef.current?.resetTools();
     viewerRef.current?.setOrgan(organ.model, organ.hotspots, organ.accent).catch(() => {
       setLoading(false);
@@ -292,12 +296,18 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
     if (tool === "isolate") setActiveTool(viewer.toggleIsolate() ? tool : null);
     if (tool === "section") setActiveTool(viewer.toggleCrossSection() ? tool : null);
     if (tool === "layers") {
-      void viewer.toggleLayers().then((on) => setActiveTool(on ? tool : null));
+      // Peel open layer by layer: chambers → +valves → +conduction → off.
+      const next = (dissectionLevel + 1) % 4;
+      setDissectionLevel(next);
+      viewer.setDissectionLevel(next);
+      setActiveTool(next > 0 ? tool : null);
     }
     if (tool === "compare") onCompare();
     if (tool === "reset") {
       viewer.reset();
       setActiveTool(null);
+      setDissectionLevel(0);
+      setMorphKey("healthy");
     }
   };
 
@@ -346,7 +356,7 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
             title={label}
           >
             <Icon size={19} strokeWidth={1.65} />
-            <span>{label}</span>
+            <span>{label}{id === "layers" && dissectionLevel > 0 ? ` ${dissectionLevel}` : ""}</span>
           </button>
         ))}
       </div>
