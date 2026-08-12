@@ -176,6 +176,8 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
   const [progress, setProgress] = useState(0);
   const [slowLoad, setSlowLoad] = useState(false);
   const [activeTool, setActiveTool] = useState<string | null>(null);
+  const [heartbeatPlaying, setHeartbeatPlaying] = useState(false);
+  const [heartbeatSpeed, setHeartbeatSpeed] = useState(1);
 
   // Opt-in coordinate probe for placing hotspots — not a user-facing feature.
   const authoring = useAuthoringFlag();
@@ -298,6 +300,20 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
     }
   };
 
+  // Cardiac-cycle animation controls (heart specimen only).
+  const handleHeartbeat = () => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    const playing = viewer.toggleHeartbeat();
+    setHeartbeatPlaying(playing);
+  };
+
+  const cycleHeartbeatSpeed = () => {
+    const next = heartbeatSpeed >= 1 ? 0.5 : heartbeatSpeed >= 0.5 ? 0.25 : 1;
+    setHeartbeatSpeed(next);
+    viewerRef.current?.setHeartbeatSpeed(next);
+  };
+
   const tools = [
     { id: "rotate", label: t.tools.rotate, icon: RotateCcw },
     { id: "zoom", label: t.tools.zoom, icon: Search },
@@ -403,6 +419,18 @@ export function OrganViewer({ organ, t, autoRotate, onAutoRotate, compare, onCom
         <RotateCcw size={14} /> {t.viewer.autoRotate}
         <span className={`switch ${autoRotate ? "on" : ""}`}><i /></span>
       </button>
+      )}
+
+      {organ.id === "heart" && !quizActive && (
+        <div className="heartbeat-controls" role="group" aria-label="Heartbeat animation">
+          <button type="button" onClick={handleHeartbeat} aria-pressed={heartbeatPlaying}
+            aria-label={heartbeatPlaying ? "Pause heartbeat" : "Play heartbeat"}>
+            {heartbeatPlaying ? "⏸" : "▶"}
+          </button>
+          <button type="button" onClick={cycleHeartbeatSpeed} aria-label="Heartbeat speed">
+            {heartbeatSpeed}x
+          </button>
+        </div>
       )}
 
       <div className="view-caption">

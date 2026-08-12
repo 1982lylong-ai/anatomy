@@ -5,6 +5,7 @@ import type { Hotspot } from "../../i18n/merge";
 import { AnatomyAssetManager, type LoadedOrgan } from "./loaders";
 import { HotspotLayer } from "./hotspots";
 import { ConductionAnimation } from "./conduction";
+import { HeartbeatAnimation } from "./heartbeat";
 
 type ViewerCallbacks = {
   onLoading: (loading: boolean, progress: number) => void;
@@ -79,6 +80,7 @@ export class AnatomyViewer {
   private pathologyMode = false;
   private anatomyHotspots: Hotspot[] = [];
   private conduction: ConductionAnimation | null = null;
+  private heartbeat: HeartbeatAnimation | null = null;
 
   constructor(container: HTMLElement, callbacks: ViewerCallbacks) {
     this.container = container;
@@ -404,6 +406,8 @@ export class AnatomyViewer {
       this.dirty = true;
     }
     this.conduction?.update(delta);
+    this.heartbeat?.update(delta);
+    if (this.heartbeat) this.syncHeartbeatUniforms();
     if (this.hoverProbe) this.resolveHover();
     if (!this.dirty && now >= this.busyUntil) return;
 
@@ -618,6 +622,11 @@ export class AnatomyViewer {
     this.crossSection = false;
     this.layersOn = false;
     this.stopConduction();
+    this.stopHeartbeat();
+    // The animations are parented to the outgoing pivot; drop the instances so
+    // the next play rebuilds them on the fresh pivot.
+    this.conduction = null;
+    this.heartbeat = null;
     (this.plinth.material as THREE.MeshStandardMaterial).opacity = 1;
     (this.contactShadow.material as THREE.MeshBasicMaterial).opacity = 0.62;
     this.applyClipping(false);
@@ -643,6 +652,63 @@ export class AnatomyViewer {
   stopConduction() {
     this.conduction?.stop();
     this.dirty = true;
+  }
+
+  /** Full cardiac-cycle animation (chamber deformation, valves, blood flow).
+   *  Also kicks off the conduction pulse so electrical and mechanical events
+   *  stay linked. Heart only. */
+  playHeartbeat() {
+    if (!this.organ || this.organ.url !== "/models/heart.glb") return;
+    if (!this.heartbeat) {
+      this.heartbeat = new HeartbeatAnimation();
+      this.heartbeat.group.visible = false;
+      this.organ.pivot.add(this.heartbeat.group);
+    }
+    this.heartbeat.play();
+    this.playConduction();
+    this.dirty = true;
+  }
+
+  toggleHeartbeat(): boolean {
+    if (!this.heartbeat) {
+      // playHeartbeat already starts the cycle.
+      this.playHeartbeat();
+      return true;
+    }
+    if (this.heartbeat.isPlaying) this.heartbeat.pause();
+    else this.heartbeat.play();
+    return this.heartbeat.isPlaying;
+  }
+
+  setHeartbeatSpeed(speed: number) {
+    this.heartbeat?.setSpeed(speed);
+  }
+
+  get heartbeatSpeed(): number {
+    return this.heartbeat?.currentSpeed ?? 1;
+  }
+
+  stopHeartbeat() {
+    this.heartbeat?.stop();
+    this.dirty = true;
+  }
+
+  /** Copies the cycle's contraction amounts onto the heart material uniforms. */
+  private syncHeartbeatUniforms() {
+    if (!this.heartbeat || !this.organ) return;
+    const { atrial, ventricular } = this.heartbeat.deformState;
+    for (const mesh of this.organ.meshes) {
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const material of materials) {
+        const uniforms = material.userData?.heartbeatUniforms as
+          | { atrialAmount?: { value: number }; ventricularAmount?: { value: number } }
+          | undefined;
+        if (uniforms?.atrialAmount && uniforms?.ventricularAmount) {
+          uniforms.atrialAmount.value = atrial;
+          uniforms.ventricularAmount.value = ventricular;
+        }
+      }
+    }
   }
 
   setCanvasLabel(label: string) {

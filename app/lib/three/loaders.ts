@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { disposeObject } from "./dispose";
+import { computeHeartbeatWeights } from "./heartbeat";
 
 /** Edge length of the cube every organ is normalised into, so hotspot
  *  coordinates authored in `anatomy-data` mean the same thing for each model. */
@@ -172,6 +173,9 @@ export class AnatomyAssetManager {
         }
         material.needsUpdate = true;
       });
+      // The heart specimen drives a cardiac-cycle deformation from region
+      // weights; other organs render as-is.
+      if (url.includes("heart.glb")) injectHeartbeatShaders(child);
     });
 
     let mixer: THREE.AnimationMixer | null = null;
@@ -238,5 +242,47 @@ export class AnatomyAssetManager {
     this.release();
     this.cache.forEach((organ) => this.destroy(organ));
     this.cache.clear();
+  }
+}
+
+/**
+ * Adds per-vertex atrial/ventricular region weights to the heart mesh and
+ * hooks the cardiac-cycle deformation into its PBR material. The HeartbeatAnimation
+ * class exposes the current contraction amounts; the viewer copies them onto
+ * the `atrialAmount`/`ventricularAmount` uniforms each frame.
+ */
+function injectHeartbeatShaders(mesh: THREE.Mesh) {
+  const geometry = mesh.geometry;
+  const position = geometry.attributes.position as THREE.BufferAttribute | undefined;
+  if (!position || geometry.getAttribute("atrialWeight")) return;
+
+  const { atrial, ventricular } = computeHeartbeatWeights(position);
+  geometry.setAttribute("atrialWeight", new THREE.BufferAttribute(atrial, 1));
+  geometry.setAttribute("ventricularWeight", new THREE.BufferAttribute(ventricular, 1));
+
+  const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  for (const material of materials) {
+    if (!(material instanceof THREE.MeshStandardMaterial)) continue;
+    const previous = material.onBeforeCompile;
+    material.onBeforeCompile = (shader, renderer) => {
+      previous?.(shader, renderer);
+      shader.uniforms.atrialAmount = { value: 0 };
+      shader.uniforms.ventricularAmount = { value: 0 };
+      // Exposed for the viewer's per-frame sync (see syncHeartbeatUniforms).
+      material.userData.heartbeatUniforms = shader.uniforms;
+      shader.vertexShader =
+        `attribute float atrialWeight;
+        attribute float ventricularWeight;
+        uniform float atrialAmount;
+        uniform float ventricularAmount;
+` + shader.vertexShader.replace(
+          "#include <begin_vertex>",
+          `#include <begin_vertex>
+          transformed += objectNormal * (atrialAmount * atrialWeight + ventricularAmount * ventricularWeight);`,
+        );
+    };
+    // Force a recompile so the hook takes effect.
+    material.customProgramCacheKey = () => "heartbeat";
+    material.needsUpdate = true;
   }
 }
